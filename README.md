@@ -8,7 +8,7 @@ Through suggestions and common passions, users will be able to find their true m
 
 ## For this project we used
 
-- Express (NodeJS), TypeORM
+- Express (NodeJS)
 - React, Redux
 - PostgreSQL
 - Nginx
