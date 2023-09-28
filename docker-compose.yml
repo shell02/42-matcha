@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: postgres
+    image: 'postgres:latest'
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    # volumes:
+    #   - ../data/matcha/:/var/lib/postgresql/data/
+    networks:
+      - matcha_network
+
+  # express:
+  #   container_name: express
+  #   env_file:
+  #     - .env
+  #   build:
+  #     context: ./API
+  #   ports:
+  #     - 3000:3000
+  #   networks:
+  #     - matcha_network
+  #   depends_on:
+  #     - postgres
+
+  # nginx:
+  #   container_name: nginx
+  #   env_file:
+  #     - .env
+  #   build:
+  #     context: ./Front
+  #   ports:
+  #     - 8080:80
+  #   networks:
+  #     - matcha_network
+  #   depends_on:
+  #     - express
+
+
+networks:
+  matcha_network:
