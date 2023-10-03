@@ -12,16 +12,16 @@ module.exports = {
   query: (text, params, callback) => pool.query(text, params, callback),
 
   exists: async (tableName) => {
-	const queryText = `
+    const queryText = `
 	  SELECT EXISTS (
 		SELECT 1
 		FROM   information_schema.tables
 		WHERE  table_name = $1
 	  );
 	`;
-  
-	const result = await pool.query(queryText, [tableName]);
-	return result.rows[0].exists;
+
+    const result = await pool.query(queryText, [tableName]);
+    return result.rows[0].exists;
   },
 
   // add select
