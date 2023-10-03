@@ -1,4 +1,4 @@
-DOckerfile
+Dockerfile
 .dockerignore
 node_modules
 dist
