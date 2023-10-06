@@ -1,9 +1,13 @@
 import * as express from 'express'
 import * as dotenv from 'dotenv'
-import { type Express, type Request, type Response } from 'express'
-
 dotenv.config({ path: '../.env' })
+
+import { type Express, type Request, type Response } from 'express'
+// import { DatabaseService } from './src/services/database.service'
+
 const app: Express = express()
+
+// const dbService = new DatabaseService()
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hi there')

@@ -1,28 +1,42 @@
-const { Pool } = require('pg');
+import { Pool, QueryResult } from 'pg'
+
+const port: number = process.env.POSTGRES_PORT
+  ? parseInt(process.env.POSTGRES_PORT)
+  : 5432
 
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
   host: process.env.POSTGRES_HOST,
   database: process.env.POSTGRES_DB,
   password: process.env.POSTGRES_PASSWORD,
-  port: process.env.POSTGRES_PORT,
-});
+  port: port,
+})
 
-module.exports = {
-  query: (text, params, callback) => pool.query(text, params, callback),
+export class mainDB {
+  async query(text: string, params?: unknown[]) {
+    return pool.query(text, params)
+  }
 
-  exists: async (tableName) => {
-    const queryText = `
-	  SELECT EXISTS (
-		SELECT 1
-		FROM   information_schema.tables
-		WHERE  table_name = $1
-	  );
-	`;
+  async queryCB(
+    text: string,
+    params: unknown[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    callback: (err: Error, result: QueryResult<any>) => void,
+  ) {
+    return pool.query(text, params, callback)
+  }
 
-    const result = await pool.query(queryText, [tableName]);
-    return result.rows[0].exists;
-  },
+  async exists(tableName: string): Promise<boolean> {
+    const queryText = ` SELECT EXISTS (
+      SELECT * FROM 
+          pg_tables
+          WHERE
+            schemaname = 'public' AND
+            tablename = '${tableName}'
+      )
+      `
 
-  // add select
-};
+    const result = await pool.query(queryText)
+    return result.rows[0].exists
+  }
+}
