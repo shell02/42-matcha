@@ -1,9 +1,9 @@
-version: '3'
+version: "3"
 
 services:
   postgres:
     container_name: postgres
-    image: 'postgres:latest'
+    image: "postgres:latest"
     ports:
       - 5432:5432
     env_file:
@@ -15,11 +15,12 @@ services:
   pgweb:
     container_name: pgweb
     image: sosedoff/pgweb:latest
+    restart: always
     env_file:
-      - .env 
+      - .env
     ports:
       - 8081:8081
-    links: 
+    links:
       - postgres:postgres
     networks:
       - matcha_network
@@ -52,7 +53,6 @@ services:
   #     - matcha_network
   #   depends_on:
   #     - express
-
 
 networks:
   matcha_network:
