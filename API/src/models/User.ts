@@ -227,7 +227,7 @@ export class userDB {
     return db
       .query(
         `INSERT INTO "user" (username, email, firstname, lastname, password, userstatus) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [username, email, firstName, lastName, password, 0],
+        [username, email, firstName, lastName, password, UserStatus.Unverified],
       )
       .then((res) => (res.rowCount > 0 ? true : false))
       .catch(() => false)

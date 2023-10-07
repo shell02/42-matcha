@@ -197,15 +197,16 @@ export class DatabaseService {
     const users = await this.users.findAllSafe()
     if (users) {
       const fullUsers: FullUserRow[] = []
-      users.map(async (user) => {
+      for (const user of users) {
         const userInfo = await this.usersInfo.findByUserID(user.userID)
         let profilePic = null
-        if (userInfo)
+        if (userInfo) {
           profilePic = await this.usersInfo.findPictureByID(
             userInfo.profilePicID,
           )
+        }
         fullUsers.push(toFullUserRow(user, userInfo, profilePic))
-      })
+      }
       return fullUsers
     }
     return users
@@ -239,7 +240,7 @@ export class DatabaseService {
     params: createUserInfoParams,
   ): Promise<FullUserRow | null> {
     const user = await this.findOneByID(params.userID)
-    if (user) {
+    if (!user) {
       throw new Error('User not found from userID')
     }
     const userInfo = await this.usersInfo.findByUserID(params.userID)
@@ -272,8 +273,10 @@ export class DatabaseService {
     const viewHistory = await this.usersRelation.findViewerHistoryOfUser(
       user.userID,
     )
-    const connected = await this.usersRelation.findLikesOfUser(user.userID)
-    const likes = await this.usersRelation.findConnectionsOfUser(user.userID)
+    const connected = await this.usersRelation.findConnectionsOfUser(
+      user.userID,
+    )
+    const likes = await this.usersRelation.findLikesOfUser(user.userID)
     const block = await this.usersRelation.findBlockedOfUser(user.userID)
     const blockFrom = await this.usersRelation.findBlockFromOfUser(user.userID)
     let pictures = null
@@ -312,8 +315,9 @@ export class DatabaseService {
     const res = await this.users.update(userID, params)
     if (res === true) {
       return this.findOneByID(userID)
+    } else {
+      throw new Error('Could not update user')
     }
-    return null
   }
 
   async updateUserInfo(
@@ -434,6 +438,14 @@ export class DatabaseService {
     return this.usersRelation.findTagsOfUser(userID)
   }
 
+  async addTagToUser(userID: number, tagID: number): Promise<boolean> {
+    return this.usersRelation.addTagToUser(tagID, userID)
+  }
+
+  async removeTagFromUser(userID: number, tagID: number): Promise<boolean> {
+    return this.usersRelation.removeTagFromUser(tagID, userID)
+  }
+
   async createTag(content: string): Promise<boolean> {
     return this.tags.create(content)
   }
@@ -448,7 +460,7 @@ export class DatabaseService {
     return this.notifications.findAllToUser(userID)
   }
 
-  async addNotificationToUSer(
+  async addNotificationToUser(
     toUserID: number,
     fromUserID: number,
     type: NotificationType,
@@ -456,7 +468,7 @@ export class DatabaseService {
     return this.notifications.create(fromUserID, toUserID, type)
   }
 
-  async deleteNotification(notifID: number): Promise<boolean> {
+  async removeNotificationFromUser(notifID: number): Promise<boolean> {
     return this.notifications.delete(notifID)
   }
 

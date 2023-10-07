@@ -99,7 +99,7 @@ export class userRelationDB {
 
   async removeTagFromUser(tagID: number, userID: number): Promise<boolean> {
     return db
-      .query(`DELETE FROM info_tag WHERE userID = $1 AND tagID = $2)`, [
+      .query(`DELETE FROM info_tag WHERE userID = $1 AND tagID = $2`, [
         userID,
         tagID,
       ])
@@ -110,7 +110,17 @@ export class userRelationDB {
   async findViewersOfUser(userID: number): Promise<SafeUserRow[] | null> {
     return db
       .query(
-        `SELECT "user".username, "user".userID FROM info_viewed INNER JOIN user ON info_viewed.viewerID = "user".userID WHERE info_viewed.userID = $1;`,
+        `SELECT
+          u.userID,
+          u.username,
+          u.firstName,
+          u.lastName
+        FROM
+          info_viewed v
+         INNER JOIN
+          "user" u ON v.viewerID = u.userID
+        WHERE
+          v.userID = $1;`,
         [userID],
       )
       .then((res) => {
@@ -138,7 +148,7 @@ export class userRelationDB {
     userID: number,
   ): Promise<boolean> {
     return db
-      .query(`DELETE FROM info_viewed WHERE userID = $1 AND viewerID = $2)`, [
+      .query(`DELETE FROM info_viewed WHERE userID = $1 AND viewerID = $2`, [
         userID,
         viewerID,
       ])
@@ -149,7 +159,17 @@ export class userRelationDB {
   async findViewerHistoryOfUser(userID: number): Promise<SafeUserRow[] | null> {
     return db
       .query(
-        `SELECT "user".username, "user".userID FROM info_view_history INNER JOIN user ON info_view_history.seenID = "user".userID WHERE info_view_history.userID = $1;`,
+        `SELECT
+          u.userID,
+          u.username,
+          u.firstName,
+          u.lastName
+        FROM
+          info_view_history v
+         INNER JOIN
+          "user" u ON v.seenID = u.userID
+        WHERE
+          v.userID = $1;`,
         [userID],
       )
       .then((res) => {
@@ -181,7 +201,7 @@ export class userRelationDB {
   ): Promise<boolean> {
     return db
       .query(
-        `DELETE FROM info_view_history WHERE userID = $1 AND seenID = $2)`,
+        `DELETE FROM info_view_history WHERE userID = $1 AND seenID = $2`,
         [userID, seenID],
       )
       .then((res) => (res.rowCount > 0 ? true : false))
@@ -191,7 +211,17 @@ export class userRelationDB {
   async findLikesOfUser(userID: number): Promise<SafeUserRow[] | null> {
     return db
       .query(
-        `SELECT "user".username, "user".userID FROM info_liked INNER JOIN user ON info_liked.likeID = "user".userID WHERE info_liked.userID = $1;`,
+        `SELECT
+        u.userID,
+        u.username,
+        u.firstName,
+        u.lastName
+      FROM
+        info_liked l
+       INNER JOIN
+        "user" u ON l.likeID = u.userID
+      WHERE
+        l.userID = $1;`,
         [userID],
       )
       .then((res) => {
@@ -216,7 +246,7 @@ export class userRelationDB {
 
   async removeLikeFromUser(likeID: number, userID: number): Promise<boolean> {
     return db
-      .query(`DELETE FROM info_liked WHERE userID = $1 AND likeID = $2)`, [
+      .query(`DELETE FROM info_liked WHERE userID = $1 AND likeID = $2`, [
         userID,
         likeID,
       ])
@@ -227,7 +257,17 @@ export class userRelationDB {
   async findConnectionsOfUser(userID: number): Promise<SafeUserRow[] | null> {
     return db
       .query(
-        `SELECT "user".username, "user".userID FROM info_connected INNER JOIN user ON info_connected.connectID = "user".userID WHERE info_connected.userID = $1;`,
+        `SELECT
+          u.userID,
+          u.username,
+          u.firstName,
+          u.lastName
+        FROM
+          info_connected c
+         INNER JOIN
+          "user" u ON c.connectID = u.userID
+        WHERE
+          c.userID = $1;`,
         [userID],
       )
       .then((res) => {
@@ -259,7 +299,7 @@ export class userRelationDB {
   ): Promise<boolean> {
     return db
       .query(
-        `DELETE FROM info_connected WHERE userID = $1 AND connectID = $2)`,
+        `DELETE FROM info_connected WHERE userID = $1 AND connectID = $2`,
         [userID, connectID],
       )
       .then((res) => (res.rowCount > 0 ? true : false))
@@ -269,7 +309,17 @@ export class userRelationDB {
   async findBlockedOfUser(userID: number): Promise<SafeUserRow[] | null> {
     return db
       .query(
-        `SELECT "user".username, "user".userID FROM info_blocked INNER JOIN user ON info_blocked.blockedID = "user".userID WHERE info_blocked.userID = $1;`,
+        `SELECT
+          u.userID,
+          u.username,
+          u.firstName,
+          u.lastName
+        FROM
+          info_blocked b
+         INNER JOIN
+          "user" u ON b.blockedID = u.userID
+        WHERE
+          b.userID = $1;`,
         [userID],
       )
       .then((res) => {
@@ -297,10 +347,10 @@ export class userRelationDB {
     userID: number,
   ): Promise<boolean> {
     return db
-      .query(
-        `DELETE FROM info_blocked WHERE userID = $1 AND  blockedID = $2)`,
-        [userID, blockedID],
-      )
+      .query(`DELETE FROM info_blocked WHERE userID = $1 AND  blockedID = $2`, [
+        userID,
+        blockedID,
+      ])
       .then((res) => (res.rowCount > 0 ? true : false))
       .catch(() => false)
   }
@@ -308,7 +358,17 @@ export class userRelationDB {
   async findBlockFromOfUser(userID: number): Promise<SafeUserRow[] | null> {
     return db
       .query(
-        `SELECT "user".username, "user".userID FROM info_blocked_from INNER JOIN user ON info_blocked_from.blockFromID = "user".userID WHERE info_blocked_from.userID = $1;`,
+        `SELECT
+        u.userID,
+        u.username,
+        u.firstName,
+        u.lastName
+      FROM
+        info_blocked_from b
+       INNER JOIN
+        "user" u ON b.blockFromID = u.userID
+      WHERE
+        b.userID = $1;`,
         [userID],
       )
       .then((res) => {
@@ -340,7 +400,7 @@ export class userRelationDB {
   ): Promise<boolean> {
     return db
       .query(
-        `DELETE FROM info_blocked_from WHERE userID = $1 AND blockFromID = $2)`,
+        `DELETE FROM info_blocked_from WHERE userID = $1 AND blockFromID = $2`,
         [userID, blockedID],
       )
       .then((res) => (res.rowCount > 0 ? true : false))

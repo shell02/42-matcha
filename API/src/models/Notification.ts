@@ -78,11 +78,21 @@ export class notificationDB {
   async findAllToUser(userID: number): Promise<NotificationRow[] | null> {
     return db
       .query(
-        `SELECT "user".username,
-								notification.*
-					FROM notification
-					INNER JOIN user ON notification.fromUserID = user.userID 
-					WHERE toUserID = $1`,
+        `SELECT
+          n.notifID,
+          n.type,
+          tu.userID AS toUserID,
+          fu.userID AS fromUserID,
+          fu.username AS username
+        FROM
+          notification n
+         INNER JOIN
+          "user" tu ON n.toUserID = tu.userID
+        INNER JOIN
+          "user" fu ON n.fromUserID = fu.userID
+        WHERE
+          toUserID = $1;
+    `,
         [userID],
       )
       .then((res) => {
@@ -104,7 +114,7 @@ export class notificationDB {
   ): Promise<boolean> {
     return db
       .query(
-        `INSERT INTO notification (fromUserID, toUserID, type) VALUES ($1, $1, $3)`,
+        `INSERT INTO notification (fromUserID, toUserID, type) VALUES ($1, $2, $3)`,
         [fromUserID, toUserID, type],
       )
       .then((res) => (res.rowCount > 0 ? true : false))

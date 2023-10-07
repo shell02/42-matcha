@@ -40,9 +40,6 @@ export enum SexualPrefType {
  * biography: string
  * latitude: number
  * longitude: number
- * onlineStatus: boolean
- * lastConnect: Date
- * fameRating: number
  * userID: number
  */
 export interface createUserInfoParams {
@@ -52,9 +49,6 @@ export interface createUserInfoParams {
   biography: string
   latitude: number
   longitude: number
-  onlineStatus: boolean
-  lastConnect: Date
-  fameRating: number
   userID: number
 }
 
@@ -82,6 +76,11 @@ export interface updateUserInfoParams {
   fameRating?: number
 }
 
+interface Location {
+  x: number
+  y: number
+}
+
 /**
  * @example
  * userinfoid: number
@@ -102,8 +101,7 @@ interface UserInfoQueryResult {
   age: number
   sexualpref: SexualPrefType
   biography: string
-  latitude: number
-  longitude: number
+  location: Location
   onlinestatus: boolean
   lastconnect: Date
   famerating: number
@@ -179,8 +177,8 @@ const toUserInfoRow = (row: UserInfoQueryResult): UserInfoRow => {
     age: row.age,
     sexualPref: row.sexualpref,
     biography: row.biography,
-    latitude: row.latitude,
-    longitude: row.longitude,
+    latitude: row.location.x,
+    longitude: row.location.y,
     onlineStatus: row.onlinestatus,
     lastConnect: row.lastconnect,
     fameRating: row.famerating,
@@ -219,12 +217,11 @@ export class userInfoDB {
 				age INT NOT NULL,
 				sexualPref INT NOT NULL,
 				biography VARCHAR(4096) NOT NULL,
-				latitude NUMERIC(3, 3) NOT NULL,
-				longitude NUMERIC(3, 3) NOT NULL,
+				location POINT NOT NULL,
 				
 				onlineStatus BOOLEAN DEFAULT TRUE,
 				lastConnect DATE DEFAULT NOW(),
-				fameRating BIGINT DEFAULT 0,
+				fameRating BIGINT,
 				
 				userID INT NOT NULL,
 				FOREIGN KEY (userID) REFERENCES "user" (userID) ON DELETE CASCADE
@@ -295,9 +292,6 @@ export class userInfoDB {
     biography,
     sexualPref,
     userID,
-    onlineStatus,
-    fameRating,
-    lastConnect,
     latitude,
     longitude,
   }: createUserInfoParams): Promise<boolean> {
@@ -309,24 +303,10 @@ export class userInfoDB {
 				 gender,
 				 biography,
 				 sexualPref,
-				 onlineStatus,
-				 fameRating,
-				 lastConnect,
-				 latitude,
-				 longitude)
-				VALUES ($1, $2, $3, $4, $5, %6, $7, $8, $9, $10)`,
-        [
-          userID,
-          age,
-          gender,
-          biography,
-          sexualPref,
-          onlineStatus,
-          fameRating,
-          lastConnect,
-          latitude,
-          longitude,
-        ],
+				 location,
+         fameRating)
+				VALUES ($1, $2, $3, $4, $5, POINT($6, $7), 0)`,
+        [userID, age, gender, biography, sexualPref, latitude, longitude],
       )
       .then((res) => (res.rowCount > 0 ? true : false))
       .catch(() => false)
@@ -340,11 +320,11 @@ export class userInfoDB {
       query += `age = $${idx++}, `
       values.push(params.age)
     }
-    if (params.gender) {
+    if (params.gender !== undefined) {
       query += `gender = $${idx++}, `
       values.push(params.gender)
     }
-    if (params.sexualPref) {
+    if (params.sexualPref !== undefined) {
       query += `sexualPref = $${idx++}, `
       values.push(params.sexualPref)
     }
@@ -352,7 +332,7 @@ export class userInfoDB {
       query += `biography = $${idx++}, `
       values.push(params.biography)
     }
-    if (params.onlineStatus) {
+    if (params.onlineStatus !== undefined) {
       query += `onlineStatus = $${idx++}, `
       values.push(params.onlineStatus)
     }
@@ -360,15 +340,24 @@ export class userInfoDB {
       query += `lastConnect = $${idx++}, `
       values.push(params.lastConnect)
     }
-    if (params.latitude) {
-      query += `latitude = $${idx++}, `
+    if (params.latitude !== undefined && params.longitude !== undefined) {
+      query += `location = POINT($${idx++}, $${idx++}), `
       values.push(params.latitude)
-    }
-    if (params.longitude) {
-      query += `longitude = $${idx++}, `
+      values.push(params.longitude)
+    } else if (params.latitude !== undefined) {
+      const y = await db
+        .query(`SELECT location FROM userInfo WHERE userID = $1`, [userID])
+        .then((res) => (res.rowCount > 0 ? res.rows[0].location.y : 0))
+      query += `location = POINT($${idx++}, ${y}), `
+      values.push(params.latitude)
+    } else if (params.longitude !== undefined) {
+      const x = await db
+        .query(`SELECT location FROM userInfo WHERE userID = $1`, [userID])
+        .then((res) => (res.rowCount > 0 ? res.rows[0].location.x : 0))
+      query += `location = POINT(${x}, $${idx++}), `
       values.push(params.longitude)
     }
-    if (params.fameRating) {
+    if (params.fameRating !== undefined) {
       query += `fameRating = $${idx++}, `
       values.push(params.fameRating)
     }
@@ -449,7 +438,7 @@ export class userInfoDB {
     }
 
     return db
-      .query(`INSERT INTO picture ${query} VALUES ($1)`, [...values])
+      .query(`INSERT INTO picture ${query} VALUES ($1, $2)`, [...values])
       .then((res) => (res.rowCount > 0 ? true : false))
       .catch(() => false)
   }
@@ -460,4 +449,18 @@ export class userInfoDB {
       .then((res) => (res.rowCount > 0 ? true : false))
       .catch(() => false)
   }
+
+  // async findUsersFromLocation(radius: number): Promise<SafeUserRow[] | null> {
+  //   return db.query(
+  //     `SELECT userID, username, firstName, lastName FROM "user"
+  //
+  //
+  //       --some kind of inner join with userInfo to get location--
+  //
+  //       WHERE ST_DWithin(location, POINT($1, $2), $3)`,
+  //     [location.x, location.y, radius],
+  //   )
+  // }
 }
+
+// WHERE ST_DWithin(coordinates, POINT(40.7128, -74.0060), 10);
