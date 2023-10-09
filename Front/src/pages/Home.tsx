@@ -1,5 +1,11 @@
 function Home() {
-  return <div>Home</div>
+  return (
+    <div>
+      <p>Home is building...</p>
+      <p>Home is building...</p>
+      <p>Home is building...</p>
+    </div>
+  )
 }
 
 export default Home
