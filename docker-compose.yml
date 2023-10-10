@@ -40,18 +40,19 @@ services:
   #   depends_on:
   #     - postgres
 
-  # nginx:
-  #   container_name: nginx
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: ./Front
-  #   ports:
-  #     - 8080:80
-  #   networks:
-  #     - matcha_network
-  #   depends_on:
-  #     - express
+  frontend:
+    image: node:lts-alpine
+    working_dir: /app
+    container_name: frontend
+    env_file:
+      - .env
+    ports:
+      - 3000:3000
+    volumes:
+      - ./Front:/app
+    networks:
+      - matcha_network
+    command: sh ./start.sh
 
 
 networks:
