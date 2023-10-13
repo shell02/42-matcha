@@ -27,6 +27,9 @@ export interface createUserParams {
  * firstName?: string
  * lastName?: string
  * password?: string
+ * verifyToken?: string | null
+ * refreshToken?: string | null
+ * resetToken?: string | null
  */
 export interface updateUserParams {
   username?: string
@@ -34,6 +37,9 @@ export interface updateUserParams {
   firstName?: string
   lastName?: string
   password?: string
+  verifyToken?: string | null
+  refreshToken?: string | null
+  resetToken?: string | null
 }
 
 /**
@@ -217,6 +223,15 @@ export class userDB {
       .then((res) => (res.rows.length > 0 ? toUserRow(res.rows[0]) : null))
   }
 
+  async findOneByToken(
+    tokenName: string,
+    token: string,
+  ): Promise<UserRow | null> {
+    return db
+      .query(`SELECT * FROM "user" WHERE $1 = $2;`, [tokenName, token])
+      .then((res) => (res.rows.length > 0 ? toUserRow(res.rows[0]) : null))
+  }
+
   async create({
     username,
     email,
@@ -256,6 +271,18 @@ export class userDB {
     if (params.password) {
       query += `password = $${idx++}, `
       values.push(params.password)
+    }
+    if (params.verifyToken) {
+      query += `verifyToken = $${idx++}, `
+      values.push(params.verifyToken)
+    }
+    if (params.refreshToken) {
+      query += `refreshToken = $${idx++}, `
+      values.push(params.refreshToken)
+    }
+    if (params.resetToken) {
+      query += `resetToken = $${idx++}, `
+      values.push(params.resetToken)
     }
 
     if (query.endsWith(', ')) {

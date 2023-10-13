@@ -1,30 +1,39 @@
-import * as express from 'express'
-import * as dotenv from 'dotenv'
+import { Application, Request, Response } from 'express'
+import express = require('express')
+import cors = require('cors')
+import cookieParser = require('cookie-parser')
+import dotenv = require('dotenv')
 dotenv.config({ path: '../.env' })
 
-import { type Express, type Request, type Response } from 'express'
-import { DatabaseService } from './src/services/database.service'
+import { authRouter } from './src/routes/auth.route.js'
+import { userRouter } from './src/routes/user.route.js'
 
-const app: Express = express()
+const app: Application = express()
 
-const dbService = new DatabaseService()
-
-const affQuery = async () => {
-  await dbService
-    .createUser({
-      username: 'MarieP',
-      email: 'marie.pliot@gmail.com',
-      firstName: 'Marie',
-      lastName: 'Pliot',
-      password: 'banana',
-    })
-    .catch((error) => console.log(error))
-
-  const users = await dbService.findAllUsers()
-  console.log(users)
+const allowlist = [
+  'http://localhost:3000',
+  'http://localhost:5432',
+  'http://localhost:3001',
+]
+const corsOptions = {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, permission?: boolean) => void,
+  ) => {
+    if (!origin || allowlist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  optionsSuccessStatus: 200,
 }
+app.use(cors(corsOptions))
+app.use(express.json())
+app.use(cookieParser())
 
-affQuery()
+app.use('/auth', authRouter)
+app.use('/users', userRouter)
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hi there')
