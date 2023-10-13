@@ -27,6 +27,7 @@ export interface createUserParams {
  * firstName?: string
  * lastName?: string
  * password?: string
+ * userStatus?: UserStatus
  * verifyToken?: string | null
  * refreshToken?: string | null
  * resetToken?: string | null
@@ -37,6 +38,7 @@ export interface updateUserParams {
   firstName?: string
   lastName?: string
   password?: string
+  userStatus?: UserStatus
   verifyToken?: string | null
   refreshToken?: string | null
   resetToken?: string | null
@@ -271,6 +273,10 @@ export class userDB {
     if (params.password) {
       query += `password = $${idx++}, `
       values.push(params.password)
+    }
+    if (params.userStatus) {
+      query += `userStatus = $${idx++}, `
+      values.push(params.userStatus)
     }
     if (params.verifyToken) {
       query += `verifyToken = $${idx++}, `

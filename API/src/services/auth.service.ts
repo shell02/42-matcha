@@ -1,7 +1,6 @@
-import { UserRow, createUserParams } from '../models/User'
+import { UserRow, UserStatus, createUserParams } from '../models/User'
 import {
   RequestError,
-  isString,
   validateRegisterBody,
 } from '../validation/utils'
 import { DatabaseService } from './database.service'
@@ -24,13 +23,27 @@ export interface Tokens {
 
 export class AuthService {
   private readonly db: DatabaseService = new DatabaseService()
+  private readonly jwtToken: string
+
+  constructor() {
+    if (!process.env.JSON_WEB_TOKEN) {
+      throw new Error('Missing env variable')
+    }
+    this.jwtToken = process.env.JSON_WEB_TOKEN
+  }
+
+  // TODO: async function to send mail with verify or reset token
 
   async registerUser(body: RegisterBody): Promise<UserRow | RequestError> {
     let user = null
-    if (!validateRegisterBody(body)) {
+    let dbError: RequestError = {
+      message: 'Database Error',
+      status: 500,
+    }
+    const error = validateRegisterBody(body)
+    if (error !== '') {
       return {
-        // TODO : be more precise in message
-        message: 'Bad Request',
+        message: error,
         status: 400,
       }
     }
@@ -43,53 +56,37 @@ export class AuthService {
       user = await this.db.createUser(params)
     } catch (e: unknown) {
       if (e instanceof Error) {
-        const error: RequestError = {
+        return {
           message: e.message,
           status: 409,
         }
-        return error
+      } else {
+        return dbError
       }
     }
     if (!user) {
-      return {
-        message: 'Database Error',
-        status: 500,
-      }
-    }
-    if (!process.env.JSON_WEB_TOKEN) {
-      return {
-        message: 'Missing env variable',
-        status: 500,
-      }
+      return dbError
     }
     const verifyToken = jwt.sign(
       { username: user.username },
-      process.env.JSON_WEB_TOKEN,
+      this.jwtToken,
       { expiresIn: '10min' },
     )
     // TODO: send mail
     user = await this.db.updateUser(user.userID, { verifyToken })
     if (!user) {
-      return {
-        message: 'Database Error',
-        status: 500,
-      }
+      return dbError
     }
     return user
   }
 
   async verifyUser(token: string): Promise<RequestError | Tokens> {
-    if (!process.env.JSON_WEB_TOKEN) {
-      return {
-        message: 'Missing env variable',
-        status: 500,
-      }
-    }
     let username = ''
-    let error = null
-    jwt.verify(token, process.env.JSON_WEB_TOKEN, (err, decoded) => {
+    let error: null | string = null
+    jwt.verify(token, this.jwtToken, (err, decoded) => {
       if (err) {
         error = err.message
+        // TODO: if err.message = jwtexpired, send another email and updateUser
         return
       }
       if (decoded && typeof decoded !== 'string') {
@@ -107,7 +104,7 @@ export class AuthService {
     if (!user || !tokenUser) {
       return {
         message: 'User not found',
-        status: 500,
+        status: 400,
       }
     }
     if (user.username !== tokenUser.username) {
@@ -117,17 +114,23 @@ export class AuthService {
       }
     }
     const accessToken = jwt.sign(
-      { username: user.username },
-      process.env.JSON_WEB_TOKEN,
+      { 
+        username: user.username,
+        userStatus: user.userStatus,
+      },
+      this.jwtToken,
       { expiresIn: '15min' },
     )
     const refreshToken = jwt.sign(
-      { username: user.username },
-      process.env.JSON_WEB_TOKEN,
+      { 
+        username: user.username,
+        userStatus: user.userStatus,
+      },
+      this.jwtToken,
       { expiresIn: '2d' },
     )
 
-    await this.db.updateUser(user.userID, { refreshToken, verifyToken: null })
+    await this.db.updateUser(user.userID, { refreshToken, verifyToken: null, userStatus: UserStatus.IncompleteProfile })
     return {
       refreshToken,
       accessToken,
@@ -135,15 +138,9 @@ export class AuthService {
   }
 
   async refreshUserToken(token: string): Promise<RequestError | Tokens> {
-    if (!process.env.JSON_WEB_TOKEN) {
-      return {
-        message: 'Missing env variable',
-        status: 500,
-      }
-    }
     let username = ''
     let error = null
-    jwt.verify(token, process.env.JSON_WEB_TOKEN, (err, decoded) => {
+    jwt.verify(token, this.jwtToken, (err, decoded) => {
       if (err) {
         error = err.message
         return
@@ -173,8 +170,11 @@ export class AuthService {
       }
     }
     const accessToken = jwt.sign(
-      { username: user.username },
-      process.env.JSON_WEB_TOKEN,
+      { 
+        username: user.username,
+        userStatus: user.userStatus,
+      },
+      this.jwtToken,
       { expiresIn: '15min' },
     )
 
@@ -183,24 +183,21 @@ export class AuthService {
     }
   }
 
+  // TODO: async funtion ForgotPassword to generate resetToken and send mail
+
   async resetPassword(token: string, password: unknown) {
-    if (!isString(password)) {
+    let pswd:string = ''
+    if (typeof password === 'string') {
+      pswd = password
+    } else {
       return {
         message: 'Bad Request',
         status: 400,
       }
     }
-    // TODO: from unknown to string
-    const pswd: string = password
-    if (!process.env.JSON_WEB_TOKEN) {
-      return {
-        message: 'Missing env variable',
-        status: 500,
-      }
-    }
     let username = ''
     let error = null
-    jwt.verify(token, process.env.JSON_WEB_TOKEN, (err, decoded) => {
+    jwt.verify(token, this.jwtToken, (err, decoded) => {
       if (err) {
         error = err.message
         return

@@ -19,7 +19,7 @@ export const isInterface = (obj: object, interfaceProps: string[]): boolean => {
   return true
 }
 
-export const validateRegisterBody = (body: RegisterBody): boolean => {
+export const validateRegisterBody = (body: RegisterBody): string => {
   if (
     !isInterface(body, [
       'username',
@@ -29,13 +29,13 @@ export const validateRegisterBody = (body: RegisterBody): boolean => {
       'firstName',
     ])
   )
-    return false
-  if (!body.email || !isEmail(body.email)) return false
-  if (!body.username || !isString(body.username)) return false
-  if (!body.password || !isString(body.password)) return false
-  if (!body.lastName || !isString(body.lastName)) return false
-  if (!body.firstName || !isString(body.firstName)) return false
-  return true
+    return "Incomplete parameters"
+  if (!body.email || !isEmail(body.email)) return 'Invalid email'
+  if (!body.username || !isString(body.username)) return 'Invalid username'
+  if (!body.password || !isString(body.password)) return 'Invalid password'
+  if (!body.lastName || !isString(body.lastName)) return 'Invalid lastName'
+  if (!body.firstName || !isString(body.firstName)) return 'Invalid firstName'
+  return ''
 }
 
 export const isEmail = (email: string): boolean => {

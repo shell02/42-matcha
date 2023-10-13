@@ -31,6 +31,7 @@ export class AuthController {
     } else if (isRequestError) {
       res.status(tokens.status).send(tokens)
     }
+    res.status(500).json({message: 'Server Error'})
   }
 
   LoginUser = async (req: Request, res: Response) => {
@@ -49,7 +50,7 @@ export class AuthController {
 
   ForgotPassword = async (req: Request, res: Response) => {
     console.log(req.body)
-    res.send('Hello')
+    res.status(204).send('Hello')
   }
 
   ResetPassword = async (req: Request, res: Response) => {
