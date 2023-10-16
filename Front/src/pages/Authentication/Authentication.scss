@@ -1,0 +1,31 @@
+.authentication {
+	width: 100vw;
+	height: 100vh;
+	background-color: var(--matcha-200-color);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	.logContainer {
+		background-color: var(--monochrome-50-color);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-direction: column;
+		padding: 1.5rem;
+		border-radius: 1rem;
+		box-shadow: 0 0 10px var(--monochrome-700-color);
+
+		.title {
+			font-size: 1.5rem;
+			font-weight: 700;
+			color: var(--matcha-600-color);
+		}
+		.formContainer {
+			padding: 1.5rem 0;
+			display: flex;
+			flex-direction: column;
+			gap: .75rem;
+		}
+	}
+}

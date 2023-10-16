@@ -5,7 +5,7 @@ import Footer from './components/Footer/Footer'
 import Home from './pages/Home'
 import Search from './pages/Search'
 import Profile from './pages/Profile'
-import Login from './pages/Authentication/Login'
+import Authentication from './pages/Authentication/Authentication'
 
 import './App.css'
 import './colors.css'
@@ -30,7 +30,7 @@ function App() {
               <Route path='/user/:userId' element={<Profile />} />
             </>
           ) : (
-            <Route path='*' element={<Login />} />
+            <Route path='*' element={<Authentication />} />
           )}
         </Routes>
       </main>
