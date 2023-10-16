@@ -79,9 +79,9 @@ interface UserQueryResult {
   email: string
   password: string
   userstatus: UserStatus
-  verifytoken: string
-  refreshtoken: string
-  resettoken: string
+  verifytoken: string | null
+  refreshtoken: string | null
+  resettoken: string | null
 }
 
 /**
@@ -115,9 +115,9 @@ export interface UserRow extends SafeUserRow {
   email: string
   password: string
   userStatus: UserStatus
-  verifyToken: string
-  refreshToken: string
-  resetToken: string
+  verifyToken: string | null
+  refreshToken: string | null
+  resetToken: string | null
 }
 
 /**
@@ -229,8 +229,10 @@ export class userDB {
     tokenName: string,
     token: string,
   ): Promise<UserRow | null> {
+    const SQLToken = `'${token}'`
+    const query = `SELECT * FROM "user" WHERE ${tokenName} = ${SQLToken}`
     return db
-      .query(`SELECT * FROM "user" WHERE $1 = $2;`, [tokenName, token])
+      .query(query)
       .then((res) => (res.rows.length > 0 ? toUserRow(res.rows[0]) : null))
   }
 
@@ -274,19 +276,19 @@ export class userDB {
       query += `password = $${idx++}, `
       values.push(params.password)
     }
-    if (params.userStatus) {
+    if (params.userStatus !== undefined) {
       query += `userStatus = $${idx++}, `
       values.push(params.userStatus)
     }
-    if (params.verifyToken) {
+    if (params.verifyToken !== undefined) {
       query += `verifyToken = $${idx++}, `
       values.push(params.verifyToken)
     }
-    if (params.refreshToken) {
+    if (params.refreshToken !== undefined) {
       query += `refreshToken = $${idx++}, `
       values.push(params.refreshToken)
     }
-    if (params.resetToken) {
+    if (params.resetToken !== undefined) {
       query += `resetToken = $${idx++}, `
       values.push(params.resetToken)
     }

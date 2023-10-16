@@ -16,22 +16,32 @@ export class AuthController {
   }
 
   VerifyUser = async (req: Request, res: Response) => {
-    const verifyToken = req.params.verifyToken
-    const tokens = await this.auth.verifyUser(verifyToken)
+    const response = await this.auth.verifyUser(req.body.token)
 
-    const isRequestError = 'status' in tokens && 'message' in tokens
-    const isTokens = 'accessToken' in tokens && 'refreshToken' in tokens
+    const isRequestError = 'status' in response && 'message' in response
+    const isTokens = 'accessToken' in response && 'refreshToken' in response
 
     if (isTokens) {
-      res.cookie('jwt', tokens.refreshToken, {
+      res.cookie('jwt', response.refreshToken, {
         httpOnly: true,
         maxAge: 48 * 60 * 60 * 1000,
       })
-      res.json({ accessToken: tokens.accessToken })
+      res.json({ accessToken: response.accessToken })
     } else if (isRequestError) {
-      res.status(tokens.status).send(tokens)
+      res.status(response.status).send(response)
+    } else {
+      res.status(500).json({ message: 'Server Error' })
     }
-    res.status(500).json({message: 'Server Error'})
+  }
+
+  SendNewVerificationEmail = async (req: Request, res: Response) => {
+    const response = await this.auth.sendNewVerifyMail(req.body.token)
+
+    if (response) {
+      res.status(response.status).send(response)
+    } else {
+      res.sendStatus(204)
+    }
   }
 
   LoginUser = async (req: Request, res: Response) => {
@@ -49,26 +59,26 @@ export class AuthController {
   }
 
   ForgotPassword = async (req: Request, res: Response) => {
-    console.log(req.body)
-    res.status(204).send('Hello')
+    const response = await this.auth.forgotPassword(req.body.email)
+
+    if (response) {
+      res.status(response.status).send(response)
+    } else {
+      res.sendStatus(204)
+    }
   }
 
   ResetPassword = async (req: Request, res: Response) => {
-    // const resetToken = req.params.resetToken
-    // const response = await this.auth.resetPassword(
-    //   resetToken,
-    //   req.body.password,
-    // )
-    // const isRequestError = 'status' in response && 'message' in response
+    const response = await this.auth.resetPassword(
+      req.body.token,
+      req.body.password,
+    )
 
-    // if (isRequestError) {
-    //   res.status(response.status).send(response)
-    // } else {
-    //   res.status(201).send(response)
-    // }
-
-    console.log(req.body)
-    res.send('Hello')
+    if (response) {
+      res.status(response.status).send(response)
+    } else {
+      res.sendStatus(204)
+    }
   }
 
   RefreshToken = async (req: Request, res: Response) => {
@@ -76,15 +86,15 @@ export class AuthController {
     if (!cookies?.jwt) return res.sendStatus(401)
 
     const refreshToken = cookies.jwt
-    const tokens = await this.auth.refreshUserToken(refreshToken)
+    const response = await this.auth.refreshUserToken(refreshToken)
 
-    const isRequestError = 'status' in tokens && 'message' in tokens
-    const isTokens = 'accessToken' in tokens
+    const isRequestError = 'status' in response && 'message' in response
+    const isTokens = 'accessToken' in response
 
     if (isTokens) {
-      res.json({ accessToken: tokens.accessToken })
+      res.json({ accessToken: response.accessToken })
     } else if (isRequestError) {
-      res.status(tokens.status).send(tokens)
+      res.status(response.status).send(response)
     }
   }
 }
