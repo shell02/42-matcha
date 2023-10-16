@@ -27,6 +27,10 @@ export interface createUserParams {
  * firstName?: string
  * lastName?: string
  * password?: string
+ * userStatus?: UserStatus
+ * verifyToken?: string | null
+ * refreshToken?: string | null
+ * resetToken?: string | null
  */
 export interface updateUserParams {
   username?: string
@@ -34,6 +38,10 @@ export interface updateUserParams {
   firstName?: string
   lastName?: string
   password?: string
+  userStatus?: UserStatus
+  verifyToken?: string | null
+  refreshToken?: string | null
+  resetToken?: string | null
 }
 
 /**
@@ -71,9 +79,9 @@ interface UserQueryResult {
   email: string
   password: string
   userstatus: UserStatus
-  verifytoken: string
-  refreshtoken: string
-  resettoken: string
+  verifytoken: string | null
+  refreshtoken: string | null
+  resettoken: string | null
 }
 
 /**
@@ -107,9 +115,9 @@ export interface UserRow extends SafeUserRow {
   email: string
   password: string
   userStatus: UserStatus
-  verifyToken: string
-  refreshToken: string
-  resetToken: string
+  verifyToken: string | null
+  refreshToken: string | null
+  resetToken: string | null
 }
 
 /**
@@ -217,6 +225,17 @@ export class userDB {
       .then((res) => (res.rows.length > 0 ? toUserRow(res.rows[0]) : null))
   }
 
+  async findOneByToken(
+    tokenName: string,
+    token: string,
+  ): Promise<UserRow | null> {
+    const SQLToken = `'${token}'`
+    const query = `SELECT * FROM "user" WHERE ${tokenName} = ${SQLToken}`
+    return db
+      .query(query)
+      .then((res) => (res.rows.length > 0 ? toUserRow(res.rows[0]) : null))
+  }
+
   async create({
     username,
     email,
@@ -256,6 +275,22 @@ export class userDB {
     if (params.password) {
       query += `password = $${idx++}, `
       values.push(params.password)
+    }
+    if (params.userStatus !== undefined) {
+      query += `userStatus = $${idx++}, `
+      values.push(params.userStatus)
+    }
+    if (params.verifyToken !== undefined) {
+      query += `verifyToken = $${idx++}, `
+      values.push(params.verifyToken)
+    }
+    if (params.refreshToken !== undefined) {
+      query += `refreshToken = $${idx++}, `
+      values.push(params.refreshToken)
+    }
+    if (params.resetToken !== undefined) {
+      query += `resetToken = $${idx++}, `
+      values.push(params.resetToken)
     }
 
     if (query.endsWith(', ')) {

@@ -165,13 +165,18 @@ const toComplexUserRow = (
  * Class interacting with the models, CRUD actions on data and error management
  */
 export class DatabaseService {
-  users: userDB = new userDB()
-  usersInfo: userInfoDB = new userInfoDB()
-  usersRelation: userRelationDB = new userRelationDB()
-  tags: tagDB = new tagDB()
-  notifications: notificationDB = new notificationDB()
+  private readonly users: userDB
+  private readonly usersInfo: userInfoDB
+  private readonly usersRelation: userRelationDB
+  private readonly tags: tagDB
+  private readonly notifications: notificationDB
 
   constructor() {
+    this.users = new userDB()
+    this.usersInfo = new userInfoDB()
+    this.usersRelation = new userRelationDB()
+    this.tags = new tagDB()
+    this.notifications = new notificationDB()
     this.users.setup()
     this.tags.setup()
   }
@@ -302,6 +307,13 @@ export class DatabaseService {
 
   async findOneByUsername(username: string): Promise<UserRow | null> {
     return this.users.findOneByUsername(username)
+  }
+
+  async findOneByToken(
+    tokenName: string,
+    token: string,
+  ): Promise<UserRow | null> {
+    return this.users.findOneByToken(tokenName, token)
   }
 
   async deleteUser(userID: number): Promise<boolean> {
