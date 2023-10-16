@@ -1,10 +1,11 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { useState } from 'react'
 import Header from './components/Header/Header'
 import Footer from './components/Footer/Footer'
 import Home from './pages/Home'
-import Login from './pages/Login'
 import Search from './pages/Search'
 import Profile from './pages/Profile'
+import Login from './pages/Authentication/Login'
 
 import './App.css'
 import './colors.css'
@@ -14,20 +15,26 @@ import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 
 function App() {
+  const [isLogged, setIsLogged] = useState(false)
+
   return (
     <BrowserRouter>
-      <Header />
+      {isLogged && <Header />}
       <main>
         <Routes>
-          <Route path='/' element={<Home />} />
-          <Route path='/search' element={<Search />} />
-          <Route path='/login' element={<Login />} />
-          <Route path='/user' element={<Profile />} />
-          <Route path='/user/:userId' element={<Profile />} />
-          <Route path='*' element={<Home />} />
+          {isLogged ? (
+            <>
+              <Route path='/' element={<Home />} />
+              <Route path='/search' element={<Search />} />
+              <Route path='/user' element={<Profile />} />
+              <Route path='/user/:userId' element={<Profile />} />
+            </>
+          ) : (
+            <Route path='*' element={<Login />} />
+          )}
         </Routes>
       </main>
-      <Footer />
+      {isLogged && <Footer />}
     </BrowserRouter>
   )
 }
