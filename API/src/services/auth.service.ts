@@ -1,4 +1,9 @@
-import { UserRow, UserStatus, createUserParams } from '../models/User'
+import {
+  UserRow,
+  UserStatus,
+  createUserParams,
+  loginParams,
+} from '../models/User'
 import { RequestError } from '../validation/utils'
 import { DatabaseService } from './database.service'
 import nodemailer = require('nodemailer')
@@ -324,6 +329,64 @@ export class AuthService {
       resetToken: null,
       password: hashedPassword,
     })
+    return
+  }
+
+  async login(body: loginParams): Promise<RequestError | Tokens> {
+    const user = await this.db.findOneByUsername(body.username)
+    if (!user) {
+      return {
+        message: 'User not found',
+        status: 401,
+      }
+    }
+    const isPasswordCorrect = await bcrypt.compare(body.password, user.password)
+    if (!isPasswordCorrect) {
+      return {
+        message: 'Incorrect password',
+        status: 401,
+      }
+    }
+    if (user.userStatus === UserStatus.Unverified) {
+      return {
+        message: 'Please verify your email',
+        status: 403,
+      }
+    }
+
+    const accessToken = jwt.sign(
+      {
+        username: user.username,
+        userStatus: user.userStatus,
+      },
+      this.jwtToken,
+      { expiresIn: '15min' },
+    )
+    const refreshToken = jwt.sign(
+      {
+        username: user.username,
+        userStatus: user.userStatus,
+      },
+      this.jwtToken,
+      { expiresIn: '2d' },
+    )
+
+    await this.db.updateUser(user.userID, { refreshToken })
+    return {
+      refreshToken,
+      accessToken,
+    }
+  }
+
+  async logout(token: string): Promise<RequestError | void> {
+    const user = await this.db.findOneByToken('refreshToken', token)
+    if (!user) {
+      return {
+        message: 'User not found',
+        status: 404,
+      }
+    }
+    await this.db.updateUser(user.userID, { refreshToken: null })
     return
   }
 }

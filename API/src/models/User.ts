@@ -46,6 +46,16 @@ export interface updateUserParams {
 
 /**
  * @example
+ * username: string
+ * password: string
+ */
+export interface loginParams {
+  username: string
+  password: string
+}
+
+/**
+ * @example
  * Unverified = 0
  * IncompleteProfile = 1
  * NoProfilePic = 2
