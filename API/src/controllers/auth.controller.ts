@@ -45,17 +45,34 @@ export class AuthController {
   }
 
   LoginUser = async (req: Request, res: Response) => {
-    // send body to function in authService
-    // if result is error, send back error and set status accordingly
-    // if result ok, refreshToken in res.cookie and accessToken in res.json --> see VerifyUser for example
+    const response = await this.auth.login(req.body)
+    const isRequestError = 'status' in response && 'message' in response
+    const isTokens = 'accessToken' in response && 'refreshToken' in response
 
-    console.log(req.body)
-    res.send('Hello')
+    if (isTokens) {
+      res.cookie('jwt', response.refreshToken, {
+        httpOnly: true,
+        maxAge: 48 * 60 * 60 * 1000,
+      })
+      res.json({ accessToken: response.accessToken })
+    } else if (isRequestError) {
+      res.status(response.status).send(response)
+    } else {
+      res.status(500).json({ message: 'Server Error' })
+    }
   }
 
   LogoutUser = async (req: Request, res: Response) => {
-    console.log(req.body)
-    res.send('Hello')
+    const refreshToken = req.cookies?.jwt
+    if (!refreshToken) return res.sendStatus(401)
+    const response = await this.auth.logout(refreshToken)
+
+    if (response) {
+      res.status(response.status).send(response)
+    } else {
+      res.clearCookie('jwt')
+      res.sendStatus(200)
+    }
   }
 
   ForgotPassword = async (req: Request, res: Response) => {

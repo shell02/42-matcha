@@ -54,6 +54,36 @@ export const validateRegisterBody = (
   }
 }
 
+export const validateLoginBody = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const body = req.body
+  let error: RequestError | null = null
+  if (!isInterface(body, ['username', 'password'])) {
+    error = {
+      message: 'Invalid body parameters',
+      status: 400,
+    }
+  } else if (!body.username || !isString(body.username)) {
+    error = {
+      message: 'Invalid username',
+      status: 400,
+    }
+  } else if (!body.password || !isString(body.password)) {
+    error = {
+      message: 'Invalid password',
+      status: 400,
+    }
+  } else {
+    next()
+  }
+  if (error) {
+    res.status(error.status).send(error)
+  }
+}
+
 export const validateToken = (
   req: Request,
   res: Response,
