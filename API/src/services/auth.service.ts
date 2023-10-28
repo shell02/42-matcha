@@ -4,7 +4,7 @@ import {
   createUserParams,
   loginParams,
 } from '../models/User'
-import { RequestError } from '../validation/utils'
+import { RequestError, encodeToken } from '../validation/utils'
 import { DatabaseService } from './database.service'
 import nodemailer = require('nodemailer')
 
@@ -88,10 +88,11 @@ export class AuthService {
     if (!user) {
       return dbError
     }
+    const encodedToken = encodeToken(verifyToken)
 
     const mailSubject = 'Matcha - Please verify your email'
     const to = user.email
-    const text = `Please click the following link to verify your email: http://localhost:3000/verify/${verifyToken}`
+    const text = `Please click the following link to verify your email: http://localhost:3000/verify/${encodedToken}`
     this.sendMail(to, mailSubject, text)
 
     return user
@@ -145,10 +146,11 @@ export class AuthService {
         status: 500,
       }
     }
+    const endodedToken = encodeToken(verifyToken)
 
     const mailSubject = 'Matcha - Please verify your email'
     const to = user.email
-    const text = `Please click the following link to verify your email:\nhttp://localhost:3000/verify/${verifyToken}`
+    const text = `Please click the following link to verify your email:\nhttp://localhost:3000/verify/${endodedToken}`
     this.sendMail(to, mailSubject, text)
     return
   }
@@ -194,7 +196,7 @@ export class AuthService {
         userStatus: user.userStatus,
       },
       this.jwtToken,
-      { expiresIn: '15min' },
+      { expiresIn: '10min' },
     )
     const refreshToken = jwt.sign(
       {
@@ -254,7 +256,7 @@ export class AuthService {
         userStatus: user.userStatus,
       },
       this.jwtToken,
-      { expiresIn: '15min' },
+      { expiresIn: '10min' },
     )
 
     return {
@@ -280,10 +282,11 @@ export class AuthService {
         status: 500,
       }
     }
+    const encodedToken = encodeToken(resetToken)
 
     const mailSubject = 'Matcha - Reset your password'
     const to = user.email
-    const text = `Please click the following link to reset your password:\nhttp://localhost:3000/reset/${resetToken}`
+    const text = `Please click the following link to reset your password:\nhttp://localhost:3000/reset/${encodedToken}`
     this.sendMail(to, mailSubject, text)
     return
   }
@@ -323,7 +326,6 @@ export class AuthService {
         status: 401,
       }
     }
-    console.log(password)
     const hashedPassword = await bcrypt.hash(password, 10)
     await this.db.updateUser(user.userID, {
       resetToken: null,
@@ -360,7 +362,7 @@ export class AuthService {
         userStatus: user.userStatus,
       },
       this.jwtToken,
-      { expiresIn: '15min' },
+      { expiresIn: '1min' },
     )
     const refreshToken = jwt.sign(
       {

@@ -3,47 +3,47 @@ import { TextField, Button } from '@mui/material'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from 'react-query'
-import { useNavigate } from 'react-router-dom'
-import Cookies from 'js-cookie'
+import { useNavigate, useParams } from 'react-router-dom'
 import * as yup from 'yup'
 import MySnackBar from '../../components/MySnackBar'
 
-interface Props {
-  setToken: React.Dispatch<React.SetStateAction<string>>
-}
-
-function Login(props: Props) {
-  const navigate = useNavigate()
-  const [username, setUsername] = useState<string>('')
-  const [password, setPassword] = useState<string>('')
+function ResetPassword() {
+  const token = useParams()
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [passStatus, setPassStatus] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
+
+  const navigate = useNavigate()
 
   const { refetch } = useQuery(
-    ['login'],
-    async () => {
-      setErrorMessage('')
+    ['resetPassword'],
+    () => {
       const body = {
-        username,
+        token: token.token,
         password,
       }
-      return fetch('http://localhost:3001/auth/login', {
+      fetch('http://localhost:3001/auth/resetPassword', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-        credentials: 'include',
       })
         .then((res) => {
-          return res.json()
+          if (res.status !== 204) return res.json()
+          else {
+            setPassStatus('Password changed')
+            setTimeout(() => {
+              navigate('/login')
+            }, 1000)
+          }
         })
         .then((json) => {
-          if ('status' in json && json.status !== 200) {
-            if ('message' in json && typeof json.message === 'string')
+          console.log(json)
+          if ('status' in json && json.status !== 204) {
+            if (json.message === 'jwt expired') {
+              setErrorMessage('Token expired')
+            } else {
               setErrorMessage(json.message)
-            else setErrorMessage('Error')
-          } else {
-            props.setToken(json.accessToken)
-            Cookies.set('accessToken', json.accessToken)
-            navigate('/')
+            }
           }
           return json
         })
@@ -57,15 +57,15 @@ function Login(props: Props) {
   )
 
   const schema = yup.object().shape({
-    username: yup
-      .string()
-      .matches(/^[a-zA-Z0-9_]+$/, 'Invalid character in your username')
-      .required('Please provide a username'),
     password: yup
       .string()
       .min(8, 'Password must be at least 8 characters long')
       .matches(/^[a-zA-Z0-9!@#$%^&*]+$/, 'Invalid character in your password')
       .required('Please provide a password'),
+    confirmPassword: yup
+      .string()
+      .oneOf([yup.ref('password')], 'Password should be the same')
+      .required('Password should be the same'),
   })
 
   const {
@@ -83,16 +83,9 @@ function Login(props: Props) {
   return (
     <>
       {errorMessage && <MySnackBar severity='error' message={errorMessage} />}
-      <div className='title'>LOGIN</div>
+      {passStatus && <MySnackBar severity='info' message={passStatus} />}
+      <div className='title'>Reset my Password</div>
       <div className='formContainer'>
-        <TextField
-          id='username'
-          label='Username'
-          error={errors.username ? true : false}
-          helperText={errors.username && errors.username.message}
-          {...register('username')}
-          onChange={(event) => setUsername(event.target.value)}
-        />
         <TextField
           id='password'
           label='Password'
@@ -102,19 +95,24 @@ function Login(props: Props) {
           {...register('password')}
           onChange={(event) => setPassword(event.target.value)}
         />
-        <Button id='login' variant='contained' onClick={handleSubmit(onSubmit)}>
-          login
+        <TextField
+          id='confirmPassword'
+          label='Confirm Password'
+          type='password'
+          error={errors.confirmPassword ? true : false}
+          helperText={errors.confirmPassword && errors.confirmPassword.message}
+          {...register('confirmPassword')}
+        />
+        <Button
+          id='resetPassword'
+          variant='contained'
+          onClick={handleSubmit(onSubmit)}
+        >
+          Reset password
         </Button>
       </div>
-      Don&apos;t have an account?
-      <Button disableRipple onClick={() => navigate('/register')}>
-        Register
-      </Button>
-      <Button disableRipple onClick={() => navigate('/forgot_password')}>
-        Forgot Password
-      </Button>
     </>
   )
 }
 
-export default Login
+export default ResetPassword

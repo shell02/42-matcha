@@ -28,6 +28,7 @@ export const createApp = (): Application => {
       }
     },
     optionsSuccessStatus: 200,
+    credentials: true,
   }
   app.use(cors(corsOptions))
   app.use(express.json())
