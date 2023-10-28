@@ -1,35 +1,36 @@
 import { useQuery } from 'react-query'
-import { refreshToken } from '../components/RefreshToken'
+import { isTokenExpired, refreshToken } from '../components/RefreshToken'
 import Cookies from 'js-cookie'
 
 function Home() {
-  const token = Cookies.get('accessToken')
+  let token = Cookies.get('accessToken') || ''
 
   useQuery(
-    ['home'],
+    ['refresh_test'],
     async () => {
-      console.log('Bearer ' + token)
-      fetch('http://localhost:3001/users', {
+      if (isTokenExpired(token)) {
+        if (await refreshToken()) {
+          token = Cookies.get('accessToken') || ''
+        } else {
+          return
+        }
+      }
+
+      const res = await fetch('http://localhost:3001/users', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
-        .then(async (res) => {
-          if (res.status === 403) {
-            await refreshToken()
-            return null
-          }
-          return res.json()
-        })
-        .then((json) => {
-          console.log(json)
-        })
+      if (!res.ok) {
+        throw new Error('Network response was not ok')
+      }
+      console.log(await res.json())
     },
     {
       retry: 1,
-      refetchOnMount: false,
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
     },
   )
 

@@ -1,4 +1,13 @@
 import Cookies from 'js-cookie'
+import { jwtDecode } from 'jwt-decode'
+
+export function isTokenExpired(token: string) {
+  if (!token) return false
+  const decodedToken = jwtDecode(token)
+  const currentTime = Date.now() / 1000
+  if (decodedToken.exp === undefined) return false
+  return decodedToken.exp < currentTime
+}
 
 export const refreshToken = async () => {
   let response = true

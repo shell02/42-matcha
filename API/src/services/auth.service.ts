@@ -362,7 +362,7 @@ export class AuthService {
         userStatus: user.userStatus,
       },
       this.jwtToken,
-      { expiresIn: '1min' },
+      { expiresIn: '10min' },
     )
     const refreshToken = jwt.sign(
       {
