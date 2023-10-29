@@ -1,5 +1,6 @@
 import { AuthService } from '../services/auth.service'
 import { Request, Response } from 'express'
+import { decodeToken } from '../validation/utils'
 
 export class AuthController {
   private readonly auth: AuthService = new AuthService()
@@ -16,7 +17,7 @@ export class AuthController {
   }
 
   VerifyUser = async (req: Request, res: Response) => {
-    const response = await this.auth.verifyUser(req.body.token)
+    const response = await this.auth.verifyUser(decodeToken(req.body.token))
 
     const isRequestError = 'status' in response && 'message' in response
     const isTokens = 'accessToken' in response && 'refreshToken' in response
@@ -35,7 +36,9 @@ export class AuthController {
   }
 
   SendNewVerificationEmail = async (req: Request, res: Response) => {
-    const response = await this.auth.sendNewVerifyMail(req.body.token)
+    const response = await this.auth.sendNewVerifyMail(
+      decodeToken(req.body.token),
+    )
 
     if (response) {
       res.status(response.status).send(response)
@@ -53,6 +56,7 @@ export class AuthController {
       res.cookie('jwt', response.refreshToken, {
         httpOnly: true,
         maxAge: 48 * 60 * 60 * 1000,
+        secure: true,
       })
       res.json({ accessToken: response.accessToken })
     } else if (isRequestError) {
@@ -87,7 +91,7 @@ export class AuthController {
 
   ResetPassword = async (req: Request, res: Response) => {
     const response = await this.auth.resetPassword(
-      req.body.token,
+      decodeToken(req.body.token),
       req.body.password,
     )
 

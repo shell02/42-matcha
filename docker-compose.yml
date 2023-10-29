@@ -8,8 +8,6 @@ services:
       - 5432:5432
     env_file:
       - .env
-    # volumes:
-    #   - ../data/matcha/:/var/lib/postgresql/data/
     networks:
       - matcha_network
   pgweb:
@@ -24,22 +22,24 @@ services:
       - postgres:postgres
     networks:
       - matcha_network
-    # volumes:
-    #   - pgadmin:/var/lib/pgadmin
     depends_on:
       - postgres
-  # express:
-  #   container_name: express
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: ./API
-  #   ports:
-  #     - 3001:3001
-  #   networks:
-  #     - matcha_network
-  #   depends_on:
-  #     - postgres
+
+  express:
+    image: node:lts-alpine
+    working_dir: /backend
+    container_name: express
+    env_file:
+      - .env
+    ports:
+      - 3001:3001
+    volumes:
+      - ./API:/backend
+    networks:
+      - matcha_network
+    depends_on:
+      - postgres
+    command: sh ./start.sh
 
   frontend:
     image: node:lts-alpine

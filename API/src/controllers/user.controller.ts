@@ -6,7 +6,6 @@ export class UserController {
   private readonly users: UserService = new UserService()
 
   getAllUsers = async (req: CustomRequest, res: Response) => {
-    console.log(req.user)
     res.send(await this.users.allUsers())
   }
 }
