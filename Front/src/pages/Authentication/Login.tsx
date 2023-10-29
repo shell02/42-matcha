@@ -12,50 +12,41 @@ interface Props {
   setLogin: React.Dispatch<React.SetStateAction<string>>
 }
 
-interface BodyParams {
-  username?: string
-  password?: string
-}
-
 function Login(props: Props) {
   const navigate = useNavigate()
-  const [body, setBody] = useState<BodyParams>({})
   const [errorMessage, setErrorMessage] = useState<string>('')
 
-  const { refetch } = useQuery(
-    ['login'],
-    async () => {
-      console.log(body)
-      setErrorMessage('')
-      return fetch('http://localhost:3001/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        credentials: 'include',
+  const handleFetch = (data: FieldValues) => {
+    setErrorMessage('')
+    return fetch('http://localhost:3001/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    })
+      .then((res) => {
+        return res.json()
       })
-        .then((res) => {
-          return res.json()
-        })
-        .then((json) => {
-          if ('status' in json && json.status !== 200) {
-            if ('message' in json && typeof json.message === 'string')
-              setErrorMessage(json.message)
-            else setErrorMessage('Error')
-          } else {
-            props.setLogin(json.accessToken)
-            Cookies.set('accessToken', json.accessToken)
-            navigate('/')
-          }
-          return json
-        })
-    },
-    {
-      enabled: false,
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    },
-  )
+      .then((json) => {
+        if ('status' in json && json.status !== 200) {
+          if ('message' in json && typeof json.message === 'string')
+            setErrorMessage(json.message)
+          else setErrorMessage('Error')
+        } else {
+          props.setLogin(json.accessToken)
+          Cookies.set('accessToken', json.accessToken)
+          navigate('/')
+        }
+        return json
+      })
+  }
+
+  useQuery(['login'], handleFetch, {
+    enabled: false,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  })
 
   const schema = yup.object().shape({
     username: yup
@@ -80,17 +71,12 @@ function Login(props: Props) {
     formState: { errors },
   } = form
 
-  const onSubmit = (data: FieldValues) => {
-    setBody(data)
-    refetch()
-  }
-
   return (
     <>
       {errorMessage && <MySnackBar severity='error' message={errorMessage} />}
       <div className='title'>LOGIN</div>
       <div className='formContainer'>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form onSubmit={handleSubmit(handleFetch)} noValidate>
           <Stack spacing={2}>
             <TextField
               id='username'

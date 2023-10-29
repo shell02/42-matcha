@@ -7,51 +7,41 @@ import { useQuery } from 'react-query'
 import { useNavigate } from 'react-router-dom'
 import MySnackBar from '../../components/MySnackBar'
 
-interface BodyParams {
-  username?: string
-  email?: string
-  firstName?: string
-  lastName?: string
-  password?: string
-}
-
 function Register() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [registered, setRegistered] = useState<boolean>(false)
-  const [body, setBody] = useState<BodyParams>({})
 
   const navigate = useNavigate()
 
-  const { refetch } = useQuery(
-    ['register'],
-    async () => {
-      setErrorMessage('')
-      return fetch('http://localhost:3001/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+  const handleFetch = (data: FieldValues) => {
+    delete data.confirmPassword
+    setErrorMessage('')
+    return fetch('http://localhost:3001/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+      .then((res) => {
+        return res.json()
       })
-        .then((res) => {
-          return res.json()
-        })
-        .then((json) => {
-          if ('status' in json && json.status !== 201) {
-            if ('message' in json && typeof json.message === 'string')
-              setErrorMessage(json.message)
-            else setErrorMessage('Error')
-          } else {
-            setRegistered(true)
-          }
-          return json
-        })
-    },
-    {
-      enabled: false,
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    },
-  )
+      .then((json) => {
+        if ('status' in json && json.status !== 201) {
+          if ('message' in json && typeof json.message === 'string')
+            setErrorMessage(json.message)
+          else setErrorMessage('Error')
+        } else {
+          setRegistered(true)
+        }
+        return json
+      })
+  }
+
+  useQuery(['register'], handleFetch, {
+    enabled: false,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  })
 
   const schema = yup.object().shape({
     username: yup
@@ -86,17 +76,6 @@ function Register() {
     formState: { errors },
   } = form
 
-  const onSubmit = (data: FieldValues) => {
-    setBody({
-      username: data.username,
-      email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      password: data.password,
-    })
-    refetch()
-  }
-
   return (
     <>
       <div className='title'>REGISTER</div>
@@ -115,7 +94,7 @@ function Register() {
             {errorMessage && (
               <MySnackBar severity='error' message={errorMessage} />
             )}
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={handleSubmit(handleFetch)}>
               <Stack spacing={2}>
                 <TextField
                   id='username'
