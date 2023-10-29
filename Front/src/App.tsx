@@ -23,17 +23,17 @@ import '@fontsource/roboto/700.css'
 
 function App() {
   const queryClient = new QueryClient()
-  const [token, setToken] = useState<string>(Cookies.get('accessToken') || '')
+  const [login, setLogin] = useState<string>(Cookies.get('accessToken') || '')
 
-  useEffect(() => {}, [token])
+  useEffect(() => {}, [login])
 
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        {token && <Header />}
+        {login && <Header />}
         <main>
           <Routes>
-            {token ? (
+            {login ? (
               <>
                 <Route path='/' element={<Home />} />
                 <Route path='/search' element={<Search />} />
@@ -45,22 +45,22 @@ function App() {
                 <Route element={<Authentication />}>
                   <Route
                     path='/login'
-                    element={<Login setToken={setToken} />}
+                    element={<Login setLogin={setLogin} />}
                   />
                   <Route path='/register' element={<Register />} />
                   <Route
                     path='/verify/:token'
-                    element={<Verify setToken={setToken} />}
+                    element={<Verify setLogin={setLogin} />}
                   />
                   <Route path='/forgot_password' element={<ForgotPassword />} />
                   <Route path='/reset/:token' element={<ResetPassword />} />
-                  <Route path='*' element={<Login setToken={setToken} />} />
+                  <Route path='*' element={<Login setLogin={setLogin} />} />
                 </Route>
               </>
             )}
           </Routes>
         </main>
-        {token && <Footer />}
+        {login && <Footer />}
       </BrowserRouter>
     </QueryClientProvider>
   )

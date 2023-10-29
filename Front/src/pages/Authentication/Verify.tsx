@@ -6,7 +6,7 @@ import Cookies from 'js-cookie'
 import MySnackBar from '../../components/MySnackBar'
 
 interface Props {
-  setToken: React.Dispatch<React.SetStateAction<string>>
+  setLogin: React.Dispatch<React.SetStateAction<string>>
 }
 
 function Verify(props: Props) {
@@ -49,7 +49,7 @@ function Verify(props: Props) {
             }
           } else {
             Cookies.set('accessToken', json.accessToken)
-            props.setToken(json.accessToken)
+            props.setLogin(json.accessToken)
             navigate('/')
           }
           return json

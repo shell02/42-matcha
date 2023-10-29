@@ -111,7 +111,7 @@ function Register() {
             <TextField
               id='username'
               label='Username'
-              error={errors.username ? true : false}
+              error={!!errors.username}
               helperText={errors.username && errors.username.message}
               {...register('username')}
               onChange={(event) => setUsername(event.target.value)}
@@ -119,7 +119,7 @@ function Register() {
             <TextField
               id='email'
               label='Email'
-              error={errors.email ? true : false}
+              error={!!errors.email}
               helperText={errors.email && errors.email.message}
               {...register('email')}
               onChange={(event) => setEmail(event.target.value)}
@@ -127,7 +127,7 @@ function Register() {
             <TextField
               id='firstName'
               label='First Name'
-              error={errors.firstName ? true : false}
+              error={!!errors.firstName}
               helperText={errors.firstName && errors.firstName.message}
               {...register('firstName')}
               onChange={(event) => setFirstName(event.target.value)}
@@ -135,7 +135,7 @@ function Register() {
             <TextField
               id='lastName'
               label='Last Name'
-              error={errors.lastName ? true : false}
+              error={!!errors.lastName}
               helperText={errors.lastName && errors.lastName.message}
               {...register('lastName')}
               onChange={(event) => setLastname(event.target.value)}
@@ -144,7 +144,7 @@ function Register() {
               id='password'
               label='Password'
               type='password'
-              error={errors.password ? true : false}
+              error={!!errors.password}
               helperText={errors.password && errors.password.message}
               {...register('password')}
               onChange={(event) => setPassword(event.target.value)}
@@ -153,7 +153,7 @@ function Register() {
               id='confirmPassword'
               label='Confirm Password'
               type='password'
-              error={errors.confirmPassword ? true : false}
+              error={!!errors.confirmPassword}
               helperText={
                 errors.confirmPassword && errors.confirmPassword.message
               }

@@ -90,7 +90,7 @@ function ResetPassword() {
           id='password'
           label='Password'
           type='password'
-          error={errors.password ? true : false}
+          error={!!errors.password}
           helperText={errors.password && errors.password.message}
           {...register('password')}
           onChange={(event) => setPassword(event.target.value)}
@@ -99,7 +99,7 @@ function ResetPassword() {
           id='confirmPassword'
           label='Confirm Password'
           type='password'
-          error={errors.confirmPassword ? true : false}
+          error={!!errors.confirmPassword}
           helperText={errors.confirmPassword && errors.confirmPassword.message}
           {...register('confirmPassword')}
         />

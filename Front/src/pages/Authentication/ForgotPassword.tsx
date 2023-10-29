@@ -70,7 +70,7 @@ function ForgotPassword() {
         <TextField
           id='email'
           label='Email'
-          error={errors.email ? true : false}
+          error={!!errors.email}
           helperText={errors.email && errors.email.message}
           {...register('email')}
           onChange={(event) => setEmail(event.target.value)}

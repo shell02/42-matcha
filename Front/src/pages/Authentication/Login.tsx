@@ -9,7 +9,7 @@ import * as yup from 'yup'
 import MySnackBar from '../../components/MySnackBar'
 
 interface Props {
-  setToken: React.Dispatch<React.SetStateAction<string>>
+  setLogin: React.Dispatch<React.SetStateAction<string>>
 }
 
 function Login(props: Props) {
@@ -41,7 +41,7 @@ function Login(props: Props) {
               setErrorMessage(json.message)
             else setErrorMessage('Error')
           } else {
-            props.setToken(json.accessToken)
+            props.setLogin(json.accessToken)
             Cookies.set('accessToken', json.accessToken)
             navigate('/')
           }
@@ -88,7 +88,7 @@ function Login(props: Props) {
         <TextField
           id='username'
           label='Username'
-          error={errors.username ? true : false}
+          error={!!errors.username}
           helperText={errors.username && errors.username.message}
           {...register('username')}
           onChange={(event) => setUsername(event.target.value)}
@@ -97,7 +97,7 @@ function Login(props: Props) {
           id='password'
           label='Password'
           type='password'
-          error={errors.password ? true : false}
+          error={!!errors.password}
           helperText={errors.password && errors.password.message}
           {...register('password')}
           onChange={(event) => setPassword(event.target.value)}
