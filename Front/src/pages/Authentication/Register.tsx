@@ -1,20 +1,24 @@
-import { Button, TextField } from '@mui/material'
+import { Button, Stack, TextField } from '@mui/material'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { FieldValues, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { useQuery } from 'react-query'
 import { useNavigate } from 'react-router-dom'
 import MySnackBar from '../../components/MySnackBar'
 
+interface BodyParams {
+  username?: string
+  email?: string
+  firstName?: string
+  lastName?: string
+  password?: string
+}
+
 function Register() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [registered, setRegistered] = useState<boolean>(false)
-  const [username, setUsername] = useState<string>('')
-  const [email, setEmail] = useState<string>('')
-  const [firstName, setFirstName] = useState<string>('')
-  const [lastName, setLastname] = useState<string>('')
-  const [password, setPassword] = useState<string>('')
+  const [body, setBody] = useState<BodyParams>({})
 
   const navigate = useNavigate()
 
@@ -22,13 +26,6 @@ function Register() {
     ['register'],
     async () => {
       setErrorMessage('')
-      const body = {
-        username,
-        email,
-        firstName,
-        lastName,
-        password,
-      }
       return fetch('http://localhost:3001/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,15 +75,25 @@ function Register() {
       .required('Password should be the same'),
   })
 
+  const form = useForm({
+    resolver: yupResolver(schema),
+    mode: 'onBlur',
+  })
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
-    resolver: yupResolver(schema),
-  })
+  } = form
 
-  const onSubmit = () => {
+  const onSubmit = (data: FieldValues) => {
+    setBody({
+      username: data.username,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      password: data.password,
+    })
     refetch()
   }
 
@@ -108,64 +115,59 @@ function Register() {
             {errorMessage && (
               <MySnackBar severity='error' message={errorMessage} />
             )}
-            <TextField
-              id='username'
-              label='Username'
-              error={!!errors.username}
-              helperText={errors.username && errors.username.message}
-              {...register('username')}
-              onChange={(event) => setUsername(event.target.value)}
-            />
-            <TextField
-              id='email'
-              label='Email'
-              error={!!errors.email}
-              helperText={errors.email && errors.email.message}
-              {...register('email')}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-            <TextField
-              id='firstName'
-              label='First Name'
-              error={!!errors.firstName}
-              helperText={errors.firstName && errors.firstName.message}
-              {...register('firstName')}
-              onChange={(event) => setFirstName(event.target.value)}
-            />
-            <TextField
-              id='lastName'
-              label='Last Name'
-              error={!!errors.lastName}
-              helperText={errors.lastName && errors.lastName.message}
-              {...register('lastName')}
-              onChange={(event) => setLastname(event.target.value)}
-            />
-            <TextField
-              id='password'
-              label='Password'
-              type='password'
-              error={!!errors.password}
-              helperText={errors.password && errors.password.message}
-              {...register('password')}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-            <TextField
-              id='confirmPassword'
-              label='Confirm Password'
-              type='password'
-              error={!!errors.confirmPassword}
-              helperText={
-                errors.confirmPassword && errors.confirmPassword.message
-              }
-              {...register('confirmPassword')}
-            />
-            <Button
-              id='register'
-              variant='contained'
-              onClick={handleSubmit(onSubmit)}
-            >
-              Register
-            </Button>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <Stack spacing={2}>
+                <TextField
+                  id='username'
+                  label='Username'
+                  error={!!errors.username}
+                  helperText={errors.username && errors.username.message}
+                  {...register('username')}
+                />
+                <TextField
+                  id='email'
+                  label='Email'
+                  error={!!errors.email}
+                  helperText={errors.email && errors.email.message}
+                  {...register('email')}
+                />
+                <TextField
+                  id='firstName'
+                  label='First Name'
+                  error={!!errors.firstName}
+                  helperText={errors.firstName && errors.firstName.message}
+                  {...register('firstName')}
+                />
+                <TextField
+                  id='lastName'
+                  label='Last Name'
+                  error={!!errors.lastName}
+                  helperText={errors.lastName && errors.lastName.message}
+                  {...register('lastName')}
+                />
+                <TextField
+                  id='password'
+                  label='Password'
+                  type='password'
+                  error={!!errors.password}
+                  helperText={errors.password && errors.password.message}
+                  {...register('password')}
+                />
+                <TextField
+                  id='confirmPassword'
+                  label='Confirm Password'
+                  type='password'
+                  error={!!errors.confirmPassword}
+                  helperText={
+                    errors.confirmPassword && errors.confirmPassword.message
+                  }
+                  {...register('confirmPassword')}
+                />
+                <Button id='register' variant='contained' type='submit'>
+                  Register
+                </Button>
+              </Stack>
+            </form>
           </>
         )}
       </div>
