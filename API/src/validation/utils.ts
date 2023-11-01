@@ -48,7 +48,7 @@ export const isBoolean = (input: unknown): boolean => {
 }
 
 export const encodeToken = (token: string): string => {
-  return token.replace(/\./g, '%')
+  return token.replace(/\./g, '%25')
 }
 
 export const decodeToken = (token: string): string => {

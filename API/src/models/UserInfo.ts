@@ -106,7 +106,6 @@ interface UserInfoQueryResult {
   lastconnect: Date
   famerating: number
   userid: number
-  profilepicid: number
 }
 
 /**
@@ -133,38 +132,6 @@ export interface UserInfoRow {
   onlineStatus: boolean
   lastConnect: Date
   fameRating: number
-  profilePicID: number
-}
-
-/**
- * @example
- * pictureid: number
- * path?: string
- * url?: string
- * userinfoid: number
- */
-interface PictureQueryResult {
-  pictureid: number
-  path: string | null
-  url: string | null
-  userinfoid: number
-}
-
-/**
- * @example
- * pictureID: number
- * path?: string
- * url?: string
- */
-export interface PictureRow {
-  pictureID: number
-  path?: string
-  url?: string
-}
-
-export interface CreatePictureParams {
-  url?: string
-  path?: string
 }
 
 /**
@@ -182,33 +149,12 @@ const toUserInfoRow = (row: UserInfoQueryResult): UserInfoRow => {
     onlineStatus: row.onlinestatus,
     lastConnect: row.lastconnect,
     fameRating: row.famerating,
-    profilePicID: row.profilepicid,
-  }
-}
-
-/**
- * lowercase to camelCase function
- */
-const toPictureRow = (row: PictureQueryResult): PictureRow => {
-  if (row.path) {
-    return {
-      pictureID: row.pictureid,
-      path: row.path,
-    }
-  } else if (row.url) {
-    return {
-      pictureID: row.pictureid,
-      url: row.url,
-    }
-  }
-  return {
-    pictureID: row.pictureid,
   }
 }
 
 export class userInfoDB {
   async setup() {
-    db.queryCB(
+    db.query(
       `
 			CREATE TABLE IF NOT EXISTS userInfo (
 				userInfoID SERIAL PRIMARY KEY,
@@ -228,49 +174,6 @@ export class userInfoDB {
 			)
     	`,
       [],
-      () => {
-        db.queryCB(
-          `
-							CREATE TABLE IF NOT EXISTS picture (
-								pictureID SERIAL PRIMARY KEY,
-								url VARCHAR(255),
-								path VARCHAR(255),
-
-								userInfoID INT NOT NULL,
-								FOREIGN KEY (userInfoID) REFERENCES userInfo (userInfoID) ON DELETE CASCADE
-								)
-							`,
-          [],
-          () => {
-            db.queryCB(
-              `
-						ALTER TABLE userInfo
-							ADD COLUMN IF NOT EXISTS profilePicID INT
-						`,
-              [],
-              () => {
-                db.query(
-                  `
-									DO $$
-									BEGIN
-
-										BEGIN
-											ALTER TABLE userInfo
-												ADD CONSTRAINT fk_picture_userInfo FOREIGN KEY (profilePicID) REFERENCES picture (pictureID) ON DELETE SET NULL;
-										EXCEPTION
-											WHEN duplicate_table THEN
-											WHEN duplicate_object THEN
-												RAISE NOTICE 'Table constraint fk_picture_userInfo already exists';
-										END;
-
-									END $$;
-									`,
-                )
-              },
-            )
-          },
-        )
-      },
     )
   }
 
@@ -282,7 +185,7 @@ export class userInfoDB {
 
   async findByUserID(userID: number): Promise<UserInfoRow | null> {
     return db
-      .query(`SELECT * FROM userInfo WHERE userInfoID = $1`, [userID])
+      .query(`SELECT * FROM userInfo WHERE userID = $1`, [userID])
       .then((res) => (res.rowCount > 0 ? toUserInfoRow(res.rows[0]) : null))
   }
 
@@ -385,67 +288,6 @@ export class userInfoDB {
   async deleteByUserID(userID: number): Promise<boolean> {
     return db
       .query(`DELETE FROM userInfo WHERE userID = $1`, [userID])
-      .then((res) => (res.rowCount > 0 ? true : false))
-      .catch(() => false)
-  }
-
-  async assignProfilePic(
-    userInfoID: number,
-    pictureID: number,
-  ): Promise<boolean> {
-    return db
-      .query(`UPDATE userInfo SET profilePicID = $1 WHERE userInfoID = $2`, [
-        pictureID,
-        userInfoID,
-      ])
-      .then((res) => (res.rowCount > 0 ? true : false))
-      .catch(() => false)
-  }
-
-  async findPictureByID(pictureID: number): Promise<PictureRow | null> {
-    return db
-      .query(`SELECT * FROM picture WHERE pictureID = $1`, [pictureID])
-      .then((res) => (res.rowCount > 0 ? toPictureRow(res.rows[0]) : null))
-  }
-
-  async findPicturesOfUser(userInfoID: number): Promise<PictureRow[] | null> {
-    return db
-      .query(`SELECT * FROM picture WHERE userInfoID = $1`, [userInfoID])
-      .then((res) => {
-        if (res.rowCount > 0) {
-          const users: PictureRow[] = res.rows.map((row) => toPictureRow(row))
-          return users
-        } else {
-          return null
-        }
-      })
-  }
-
-  async createPicture(
-    userInfoID: number,
-    params: CreatePictureParams,
-  ): Promise<boolean> {
-    let query: string = '(userInfoID, '
-    const values: unknown[] = []
-    values.push(userInfoID)
-
-    if (params.path) {
-      query += `path)`
-      values.push(params.path)
-    } else if (params.url) {
-      query += `url)`
-      values.push(params.url)
-    }
-
-    return db
-      .query(`INSERT INTO picture ${query} VALUES ($1, $2)`, [...values])
-      .then((res) => (res.rowCount > 0 ? true : false))
-      .catch(() => false)
-  }
-
-  async deletePicture(pictureID: number): Promise<boolean> {
-    return db
-      .query(`DELETE FROM picture WHERE pictureid = $1`, [pictureID])
       .then((res) => (res.rowCount > 0 ? true : false))
       .catch(() => false)
   }
