@@ -7,14 +7,14 @@ import { tagDB, TagRow } from '../models/Tag'
 import {
   SafeUserRow,
   UserRow,
+  PictureRow,
   createUserParams,
   updateUserParams,
+  CreatePictureParams,
   userDB,
 } from '../models/User'
 import {
-  CreatePictureParams,
   GenderType,
-  PictureRow,
   SexualPrefType,
   UserInfoRow,
   createUserInfoParams,
@@ -205,11 +205,8 @@ export class DatabaseService {
       for (const user of users) {
         const userInfo = await this.usersInfo.findByUserID(user.userID)
         let profilePic = null
-        if (userInfo) {
-          profilePic = await this.usersInfo.findPictureByID(
-            userInfo.profilePicID,
-          )
-        }
+        if (user.profilePicID)
+          profilePic = await this.users.findPictureByID(user.profilePicID)
         fullUsers.push(toFullUserRow(user, userInfo, profilePic))
       }
       return fullUsers
@@ -264,8 +261,8 @@ export class DatabaseService {
     if (!user) return null
     const userInfo = await this.usersInfo.findByUserID(userID)
     let profilePic = null
-    if (userInfo)
-      profilePic = await this.usersInfo.findPictureByID(userInfo.profilePicID)
+    if (user.profilePicID)
+      profilePic = await this.users.findPictureByID(user.profilePicID)
     return toFullUserRow(user, userInfo, profilePic)
   }
 
@@ -284,9 +281,7 @@ export class DatabaseService {
     const likes = await this.usersRelation.findLikesOfUser(user.userID)
     const block = await this.usersRelation.findBlockedOfUser(user.userID)
     const blockFrom = await this.usersRelation.findBlockFromOfUser(user.userID)
-    let pictures = null
-    if (userInfo)
-      pictures = await this.usersInfo.findPicturesOfUser(userInfo?.userInfoID)
+    const pictures = await this.users.findPicturesOfUser(user.userID)
     return toComplexUserRow(
       user,
       userInfo,
@@ -484,25 +479,22 @@ export class DatabaseService {
     return this.notifications.delete(notifID)
   }
 
-  async findPicturesOfUser(userInfoID: number): Promise<PictureRow[] | null> {
-    return this.usersInfo.findPicturesOfUser(userInfoID)
+  async findPicturesOfUser(userID: number): Promise<PictureRow[] | null> {
+    return this.users.findPicturesOfUser(userID)
   }
 
   async createPicture(
-    userInfoID: number,
+    userID: number,
     params: CreatePictureParams,
   ): Promise<boolean> {
-    return this.usersInfo.createPicture(userInfoID, params)
+    return this.users.createPicture(userID, params)
   }
 
-  async assignProfilePic(
-    userInfoID: number,
-    pictureID: number,
-  ): Promise<boolean> {
-    return this.usersInfo.assignProfilePic(userInfoID, pictureID)
+  async assignProfilePic(userID: number, pictureID: number): Promise<boolean> {
+    return this.users.assignProfilePic(userID, pictureID)
   }
 
   async deletePicture(pictureID: number): Promise<boolean> {
-    return this.usersInfo.deletePicture(pictureID)
+    return this.users.deletePicture(pictureID)
   }
 }
