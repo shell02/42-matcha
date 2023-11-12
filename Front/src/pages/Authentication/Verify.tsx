@@ -1,6 +1,6 @@
 import { Button, CircularProgress } from '@mui/material'
 import { useState } from 'react'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import Cookies from 'js-cookie'
 import MySnackBar from '../../components/MySnackBar'
@@ -16,9 +16,9 @@ function Verify(props: Props) {
 
   const navigate = useNavigate()
 
-  useQuery(
-    ['verify'],
-    async () => {
+  useQuery({
+    queryKey: ['verify'],
+    queryFn: async () => {
       setErrorMessage('')
       const body = {
         token: token.token,
@@ -50,21 +50,19 @@ function Verify(props: Props) {
           } else {
             Cookies.set('accessToken', json.accessToken)
             props.setLogin(json.accessToken)
-            navigate('/')
+            navigate('/editProfile')
           }
           return json
         })
     },
-    {
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    },
-  )
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  })
 
-  const { refetch: refetchMail } = useQuery(
-    ['newMail'],
-    async () => {
+  const { refetch: refetchMail } = useQuery({
+    queryKey: ['newMail'],
+    queryFn: async () => {
       setErrorMessage('')
       const body = {
         token: token.token,
@@ -89,13 +87,11 @@ function Verify(props: Props) {
           return json
         })
     },
-    {
-      enabled: false,
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    },
-  )
+    enabled: false,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  })
 
   return (
     <>

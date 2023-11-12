@@ -1,10 +1,21 @@
 import { Button, ImageList, ImageListItem } from '@mui/material'
 import { styled } from '@mui/material/styles'
-import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import AddToPhotosIcon from '@mui/icons-material/AddToPhotos'
+import DeleteIcon from '@mui/icons-material/Delete'
+import StarIcon from '@mui/icons-material/Star'
+import {
+  useAssignProfilePic,
+  useDeletePhoto,
+  useGetPhotos,
+  useGetUser,
+  usePostPhoto,
+} from '../../hooks/queries/userQueries'
+import { ChangeEvent, useEffect, useState } from 'react'
+import './PhotoGallery.scss'
 
 interface Photos {
-  img: string
-  title: string
+  pictureID: number
+  path: string
 }
 
 const VisuallyHiddenInput = styled('input')({
@@ -20,32 +31,46 @@ const VisuallyHiddenInput = styled('input')({
 })
 
 function PhotoGallery() {
-  const itemData: Photos[] = [
-    {
-      img: 'https://images.unsplash.com/photo-1551963831-b3b1ca40c98e',
-      title: 'Breakfast',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1551782450-a2132b4ba21d',
-      title: 'Burger',
-    },
-  ]
+  const { data: user } = useGetUser()
+  const { data: photos } = useGetPhotos()
+  const postPhoto = usePostPhoto()
+  const assignPhoto = useAssignProfilePic()
+  const deletePhoto = useDeletePhoto()
+  const [profilePicId, setProfilePicId] = useState(0)
+  const [photoSelected, setPhotoSelected] = useState(0)
 
-  const onFileUpload = () => {
-    console.log('onFileUpload')
+  useEffect(() => {
+    if (user) {
+      setProfilePicId(user.profilePicId)
+    }
+  }, [user])
+
+  const onFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) postPhoto.mutateAsync(e.target.files[0])
+  }
+
+  const handleProfilePicture = () => {
+    assignPhoto.mutateAsync({ pictureID: photoSelected })
+  }
+
+  const handleDeletePhoto = () => {
+    deletePhoto.mutateAsync({ pictureID: photoSelected })
   }
 
   return (
     <div>
       <ImageList cols={3}>
-        {!!itemData.length &&
-          itemData.map((item) => (
-            <ImageListItem key={item.img}>
+        {!!photos &&
+          photos.map((item: Photos) => (
+            <ImageListItem key={item.pictureID}>
               <img
-                src={`${item.img}?w=164&h=164&fit=crop&auto=format`}
-                srcSet={`${item.img}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
-                alt={item.title}
+                src={`http://localhost:3001/${item.path}?w=164&h=164&fit=crop&auto=format`}
                 loading='lazy'
+                className={`image ${
+                  profilePicId === item.pictureID ? 'isProfilePicture' : ''
+                }
+                ${photoSelected === item.pictureID ? 'isSelected' : ''}`}
+                onClick={() => setPhotoSelected(item.pictureID)}
               />
             </ImageListItem>
           ))}
@@ -53,10 +78,26 @@ function PhotoGallery() {
       <Button
         component='label'
         variant='contained'
-        endIcon={<CloudUploadIcon />}
+        endIcon={<AddToPhotosIcon />}
       >
-        Upload new image
-        <VisuallyHiddenInput type='file' onClick={onFileUpload} />
+        Add Photo
+        <VisuallyHiddenInput type='file' onChange={onFileUpload} />
+      </Button>
+      <Button
+        variant='contained'
+        endIcon={<StarIcon />}
+        disabled={!photoSelected}
+        onClick={handleProfilePicture}
+      >
+        Assign to profile photo
+      </Button>
+      <Button
+        variant='contained'
+        endIcon={<DeleteIcon />}
+        disabled={!photoSelected}
+        onClick={handleDeletePhoto}
+      >
+        Delete Photo
       </Button>
     </div>
   )

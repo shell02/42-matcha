@@ -1,0 +1,19 @@
+.image {
+  width: 100px !important;
+  height: 100px !important;
+  border: 3px solid;
+  border-color: transparent;
+  transition: border-color 0.5s;
+}
+
+.image:hover  {
+  border-color: #6b8d51;
+}
+
+.isSelected  {
+  border-color: #6b8d51;
+}
+
+.isProfilePicture {
+  border-color: blue;
+}

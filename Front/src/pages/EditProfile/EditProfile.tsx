@@ -1,6 +1,6 @@
-import AccountForm from '../components/AccountForm/AccountForm'
-import PhotoGallery from '../components/PhotoGallery/PhotoGallery'
-import ProfileForm from '../components/ProfileForm/ProfileForm'
+import AccountForm from '../../components/AccountForm/AccountForm'
+import PhotoGallery from '../../components/PhotoGallery/PhotoGallery'
+import ProfileForm from '../../components/ProfileForm/ProfileForm'
 
 function EditProfile() {
   return (
