@@ -3,10 +3,14 @@ import express = require('express')
 import cors = require('cors')
 import cookieParser = require('cookie-parser')
 import dotenv = require('dotenv')
+import path = require('path')
+import fs = require('fs')
 dotenv.config({ path: '../.env' })
 
 import { authRouter } from './routes/auth.route'
 import { userRouter } from './routes/user.route'
+
+export const uploadPath = path.join(__dirname, 'uploads')
 
 export const createApp = (): Application => {
   const app: Application = express()
@@ -30,9 +34,13 @@ export const createApp = (): Application => {
     optionsSuccessStatus: 200,
     credentials: true,
   }
+
+  if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath)
+
   app.use(cors(corsOptions))
   app.use(express.json())
   app.use(cookieParser())
+  app.use('/uploads', express.static(uploadPath))
 
   app.use('/auth', authRouter)
   app.use('/users', userRouter)

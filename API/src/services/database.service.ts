@@ -31,7 +31,7 @@ import { userRelationDB } from '../models/UserRelation'
  * lastName: string
  * userInfoID?: number
  * gender?: GenderType
- * age?: number
+ * age?: Date
  * sexualPref?: SexualPrefType
  * biography?: string
  * latitude?: number
@@ -44,7 +44,7 @@ import { userRelationDB } from '../models/UserRelation'
 export interface FullUserRow extends SafeUserRow {
   userInfoID?: number
   gender?: GenderType
-  age?: number
+  age?: Date
   sexualPref?: SexualPrefType
   biography?: string
   latitude?: number
@@ -63,7 +63,7 @@ export interface FullUserRow extends SafeUserRow {
  * lastName: string
  * userInfoID?: number
  * gender?: GenderType
- * age?: number
+ * age?: Date
  * sexualPref?: SexualPrefType
  * biography?: string
  * latitude?: number
@@ -477,6 +477,10 @@ export class DatabaseService {
 
   async removeNotificationFromUser(notifID: number): Promise<boolean> {
     return this.notifications.delete(notifID)
+  }
+
+  async findPictureByID(pictureID: number): Promise<PictureRow | null> {
+    return this.users.findPictureByID(pictureID)
   }
 
   async findPicturesOfUser(userID: number): Promise<PictureRow[] | null> {

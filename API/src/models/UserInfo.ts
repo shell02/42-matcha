@@ -35,7 +35,7 @@ export enum SexualPrefType {
 /**
  * @example
  * gender: GenderType
- * age: number
+ * age: Date
  * sexualPref: SexualPrefType
  * biography: string
  * latitude: number
@@ -44,7 +44,7 @@ export enum SexualPrefType {
  */
 export interface createUserInfoParams {
   gender: GenderType
-  age: number
+  age: Date
   sexualPref: SexualPrefType
   biography: string
   latitude: number
@@ -55,7 +55,7 @@ export interface createUserInfoParams {
 /**
  * @example
  * gender?: GenderType
- * age?: number
+ * age?: Date
  * sexualPref?: SexualPrefType
  * biography?: string
  * latitude?: number
@@ -66,7 +66,7 @@ export interface createUserInfoParams {
  */
 export interface updateUserInfoParams {
   gender?: GenderType
-  age?: number
+  age?: Date
   sexualPref?: SexualPrefType
   biography?: string
   latitude?: number
@@ -85,7 +85,7 @@ interface Location {
  * @example
  * userinfoid: number
  * gender: GenderType
- * age: number
+ * age: Date
  * sexualpref: SexualPrefType
  * biography: string
  * latitude: number
@@ -98,7 +98,7 @@ interface Location {
 interface UserInfoQueryResult {
   userinfoid: number
   gender: GenderType
-  age: number
+  age: Date
   sexualpref: SexualPrefType
   biography: string
   location: Location
@@ -112,7 +112,7 @@ interface UserInfoQueryResult {
  * @example
  * userInfoID: number
  * gender: GenderType
- * age: number
+ * age: Date
  * sexualPref: SexualPrefType
  * biography: string
  * latitude: number
@@ -124,7 +124,7 @@ interface UserInfoQueryResult {
 export interface UserInfoRow {
   userInfoID: number
   gender: GenderType
-  age: number
+  age: Date
   sexualPref: SexualPrefType
   biography: string
   latitude: number
@@ -160,7 +160,7 @@ export class userInfoDB {
 				userInfoID SERIAL PRIMARY KEY,
 				
 				gender INT NOT NULL,
-				age INT NOT NULL,
+				age DATE NOT NULL,
 				sexualPref INT NOT NULL,
 				biography VARCHAR(4096) NOT NULL,
 				location POINT NOT NULL,

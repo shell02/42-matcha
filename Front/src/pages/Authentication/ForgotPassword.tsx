@@ -2,18 +2,18 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { TextField, Button } from '@mui/material'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useQuery } from 'react-query'
-import * as yup from 'yup'
+import { useQuery } from '@tanstack/react-query'
 import MySnackBar from '../../components/MySnackBar'
+import { accountSchema } from '../../utils/schemas'
 
 function ForgotPassword() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [mailStatus, setMailStatus] = useState<string>('')
   const [email, setEmail] = useState<string>('')
 
-  const { refetch } = useQuery(
-    ['forgotPassword'],
-    () => {
+  const { refetch } = useQuery({
+    queryKey: ['forgotPassword'],
+    queryFn: () => {
       setErrorMessage('')
       setMailStatus('')
       const body = {
@@ -36,16 +36,10 @@ function ForgotPassword() {
           }
         })
     },
-    {
-      enabled: false,
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    },
-  )
-
-  const schema = yup.object().shape({
-    email: yup.string().email().required('Please provide an email'),
+    enabled: false,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   })
 
   const {
@@ -53,7 +47,7 @@ function ForgotPassword() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(accountSchema.pick(['email'])),
   })
 
   const onSubmit = () => {
