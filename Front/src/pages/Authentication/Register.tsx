@@ -2,10 +2,10 @@ import { Button, Stack, TextField } from '@mui/material'
 import { useState } from 'react'
 import { FieldValues, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import * as yup from 'yup'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import MySnackBar from '../../components/MySnackBar'
+import { accountSchema } from '../../utils/schemas'
 
 function Register() {
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -36,37 +36,17 @@ function Register() {
       })
   }
 
-  useQuery(['register'], handleFetch, {
+  useQuery({
+    queryKey: ['register'],
+    queryFn: handleFetch,
     enabled: false,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   })
 
-  const schema = yup.object().shape({
-    username: yup
-      .string()
-      .matches(/^[a-zA-Z0-9_]+$/, 'Invalid character in your username')
-      .required('Please provide a username'),
-    email: yup
-      .string()
-      .email('Please provide a valid email')
-      .required('Please provide an email'),
-    firstName: yup.string().required('Please provide your first name'),
-    lastName: yup.string().required('Please provide your last name'),
-    password: yup
-      .string()
-      .min(8, 'Password must be at least 8 characters long')
-      .matches(/^[a-zA-Z0-9!@#$%^&*]+$/, 'Invalid character in your password')
-      .required('Please provide a password'),
-    confirmPassword: yup
-      .string()
-      .oneOf([yup.ref('password')], 'Password should be the same')
-      .required('Password should be the same'),
-  })
-
   const form = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(accountSchema),
     mode: 'onBlur',
   })
 

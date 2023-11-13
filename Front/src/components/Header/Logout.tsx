@@ -1,23 +1,22 @@
 import { Button } from '@mui/material'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import Cookies from 'js-cookie'
 
 function Logout() {
-  const { refetch } = useQuery(
-    ['logout'],
-    () => {
+  const { refetch } = useQuery({
+    queryKey: ['logout'],
+    queryFn: () => {
       fetch('http://localhost:3001/auth/logout', {
         method: 'POST',
         credentials: 'include',
       })
     },
-    {
-      enabled: false,
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    },
-  )
+
+    enabled: false,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  })
 
   const onClickLogout = () => {
     refetch()

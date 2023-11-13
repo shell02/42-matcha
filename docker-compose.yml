@@ -29,6 +29,7 @@ services:
     image: node:lts-alpine
     working_dir: /backend
     container_name: express
+    restart: always
     env_file:
       - .env
     ports:

@@ -194,6 +194,7 @@ export class AuthService {
       {
         username: user.username,
         userStatus: user.userStatus,
+        id: user.userID,
       },
       this.jwtToken,
       { expiresIn: '10min' },
@@ -254,6 +255,7 @@ export class AuthService {
       {
         username: user.username,
         userStatus: user.userStatus,
+        id: user.userID,
       },
       this.jwtToken,
       { expiresIn: '10min' },
@@ -360,6 +362,7 @@ export class AuthService {
       {
         username: user.username,
         userStatus: user.userStatus,
+        id: user.userID,
       },
       this.jwtToken,
       { expiresIn: '10min' },

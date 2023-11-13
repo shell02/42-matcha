@@ -10,32 +10,35 @@ export function isTokenExpired(token: string) {
 }
 
 export const refreshToken = async () => {
-  let response = true
-  fetch('http://localhost:3001/auth/refreshToken', {
-    method: 'GET',
-    credentials: 'include',
-  })
-    .then((res) => {
-      if (res.status !== 200) {
-        response = false
-        fetch('http://localhost:3001/auth/logout', {
-          method: 'POST',
-          credentials: 'include',
-        })
-        Cookies.remove('accessToken')
-        window.location.reload()
-      }
-      return res.json()
+  try {
+    const response = await fetch('http://localhost:3001/auth/refreshToken', {
+      method: 'GET',
+      credentials: 'include',
     })
-    .then((json) => {
-      if (json.accessToken) {
-        Cookies.set('accessToken', json.accessToken, {
-          sameSite: 'Strict',
-          secure: true,
-        })
-      } else {
-        response = false
-      }
-    })
-  return response
+
+    if (response.status !== 200) {
+      await fetch('http://localhost:3001/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+      Cookies.remove('accessToken')
+      window.location.reload()
+      throw new Error('Refresh token failed')
+    }
+
+    const json = await response.json()
+
+    if (json.accessToken) {
+      Cookies.set('accessToken', json.accessToken, {
+        sameSite: 'Strict',
+        secure: true,
+      })
+      return true
+    } else {
+      throw new Error('Access token not found in response')
+    }
+  } catch (error) {
+    console.error('Error refreshing token:', error)
+    return false
+  }
 }

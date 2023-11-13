@@ -2,10 +2,10 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { TextField, Button } from '@mui/material'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import * as yup from 'yup'
 import MySnackBar from '../../components/MySnackBar'
+import { accountSchema } from '../../utils/schemas'
 
 function ResetPassword() {
   const token = useParams()
@@ -15,9 +15,9 @@ function ResetPassword() {
 
   const navigate = useNavigate()
 
-  const { refetch } = useQuery(
-    ['resetPassword'],
-    () => {
+  const { refetch } = useQuery({
+    queryKey: ['resetPassword'],
+    queryFn: () => {
       const body = {
         token: token.token,
         password,
@@ -48,24 +48,11 @@ function ResetPassword() {
           return json
         })
     },
-    {
-      enabled: false,
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    },
-  )
 
-  const schema = yup.object().shape({
-    password: yup
-      .string()
-      .min(8, 'Password must be at least 8 characters long')
-      .matches(/^[a-zA-Z0-9!@#$%^&*]+$/, 'Invalid character in your password')
-      .required('Please provide a password'),
-    confirmPassword: yup
-      .string()
-      .oneOf([yup.ref('password')], 'Password should be the same')
-      .required('Password should be the same'),
+    enabled: false,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   })
 
   const {
@@ -73,7 +60,7 @@ function ResetPassword() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(accountSchema.pick(['password', 'confirmPassword'])),
   })
 
   const onSubmit = () => {

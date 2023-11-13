@@ -92,6 +92,7 @@ interface UserQueryResult {
   verifytoken: string | null
   refreshtoken: string | null
   resettoken: string | null
+  profilepicid: number | null
 }
 
 /**
@@ -100,12 +101,14 @@ interface UserQueryResult {
  * username: string
  * firstName: string
  * lastName: string
+ * profilePicID: number | null
  */
 export interface SafeUserRow {
   userID: number
   username: string
   firstName: string
   lastName: string
+  profilePicID: number | null
 }
 
 /**
@@ -120,6 +123,7 @@ export interface SafeUserRow {
  * verifyToken: string
  * refreshToken: string
  * resetToken: string
+ * profilePicID: number | null
  */
 export interface UserRow extends SafeUserRow {
   email: string
@@ -128,6 +132,7 @@ export interface UserRow extends SafeUserRow {
   verifyToken: string | null
   refreshToken: string | null
   resetToken: string | null
+  profilePicID: number | null
 }
 
 /**
@@ -145,6 +150,7 @@ const toUserRow = (row: UserQueryResult): UserRow => {
     verifyToken: row.verifytoken,
     refreshToken: row.refreshtoken,
     resetToken: row.refreshtoken,
+    profilePicID: row.profilepicid,
   }
 }
 
@@ -157,6 +163,58 @@ export const toSafeUserRow = (row: UserQueryResult): SafeUserRow => {
     username: row.username,
     firstName: row.firstname,
     lastName: row.lastname,
+    profilePicID: row.profilepicid,
+  }
+}
+
+/**
+ * @example
+ * pictureid: number
+ * path?: string
+ * url?: string
+ * userid: number
+ */
+interface PictureQueryResult {
+  pictureid: number
+  path: string | null
+  url: string | null
+  userid: number
+}
+
+/**
+ * @example
+ * pictureID: number
+ * path?: string
+ * url?: string
+ */
+export interface PictureRow {
+  pictureID: number
+  path?: string
+  url?: string
+}
+
+export interface CreatePictureParams {
+  url?: string
+  path?: string
+}
+
+/**
+ * lowercase to camelCase function
+ */
+const toPictureRow = (row: PictureQueryResult): PictureRow => {
+  if (row.path) {
+    return {
+      pictureID: row.pictureid,
+      path: row.path,
+    }
+  } else if (row.url) {
+    return {
+      pictureID: row.pictureid,
+      url: row.url,
+    }
+  }
+  return {
+    pictureID: row.pictureid,
   }
 }
 
@@ -189,6 +247,48 @@ export class userDB {
 
         const notifications = new notificationDB()
         notifications.setup()
+
+        db.queryCB(
+          `
+							CREATE TABLE IF NOT EXISTS picture (
+								pictureID SERIAL PRIMARY KEY,
+								url VARCHAR(255),
+								path VARCHAR(255),
+
+								userID INT NOT NULL,
+								FOREIGN KEY (userID) REFERENCES "user" (userID) ON DELETE CASCADE
+								)
+							`,
+          [],
+          () => {
+            db.queryCB(
+              `
+						ALTER TABLE "user"
+							ADD COLUMN IF NOT EXISTS profilePicID INT
+						`,
+              [],
+              () => {
+                db.query(
+                  `
+									DO $$
+									BEGIN
+
+										BEGIN
+											ALTER TABLE "user"
+												ADD CONSTRAINT fk_picture_user FOREIGN KEY (profilePicID) REFERENCES picture (pictureID) ON DELETE SET NULL;
+										EXCEPTION
+											WHEN duplicate_table THEN
+											WHEN duplicate_object THEN
+												RAISE NOTICE 'Table constraint fk_picture_user already exists';
+										END;
+
+									END $$;
+									`,
+                )
+              },
+            )
+          },
+        )
       },
     )
   }
@@ -319,6 +419,64 @@ export class userDB {
   async delete(userID: number): Promise<boolean> {
     return db
       .query(`DELETE FROM "user" WHERE userID = $1`, [userID])
+      .then((res) => (res.rowCount > 0 ? true : false))
+      .catch(() => false)
+  }
+
+  async assignProfilePic(userID: number, pictureID: number): Promise<boolean> {
+    return db
+      .query(`UPDATE "user" SET profilePicID = $1 WHERE userID = $2`, [
+        pictureID,
+        userID,
+      ])
+      .then((res) => (res.rowCount > 0 ? true : false))
+      .catch(() => false)
+  }
+
+  async findPictureByID(pictureID: number): Promise<PictureRow | null> {
+    return db
+      .query(`SELECT * FROM picture WHERE pictureID = $1`, [pictureID])
+      .then((res) => (res.rowCount > 0 ? toPictureRow(res.rows[0]) : null))
+  }
+
+  async findPicturesOfUser(userID: number): Promise<PictureRow[] | null> {
+    return db
+      .query(`SELECT * FROM picture WHERE userID = $1`, [userID])
+      .then((res) => {
+        if (res.rowCount > 0) {
+          const users: PictureRow[] = res.rows.map((row) => toPictureRow(row))
+          return users
+        } else {
+          return null
+        }
+      })
+  }
+
+  async createPicture(
+    userID: number,
+    params: CreatePictureParams,
+  ): Promise<boolean> {
+    let query: string = '(userID, '
+    const values: unknown[] = []
+    values.push(userID)
+
+    if (params.path) {
+      query += `path)`
+      values.push(params.path)
+    } else if (params.url) {
+      query += `url)`
+      values.push(params.url)
+    }
+
+    return db
+      .query(`INSERT INTO picture ${query} VALUES ($1, $2)`, [...values])
+      .then((res) => (res.rowCount > 0 ? true : false))
+      .catch(() => false)
+  }
+
+  async deletePicture(pictureID: number): Promise<boolean> {
+    return db
+      .query(`DELETE FROM picture WHERE pictureid = $1`, [pictureID])
       .then((res) => (res.rowCount > 0 ? true : false))
       .catch(() => false)
   }
