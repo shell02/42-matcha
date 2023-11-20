@@ -6,7 +6,7 @@ function Logout() {
   const { refetch } = useQuery({
     queryKey: ['logout'],
     queryFn: () => {
-      fetch('http://localhost:3001/auth/logout', {
+      return fetch('http://localhost:3001/auth/logout', {
         method: 'POST',
         credentials: 'include',
       })

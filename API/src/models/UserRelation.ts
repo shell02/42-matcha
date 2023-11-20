@@ -60,15 +60,6 @@ export class userRelationDB {
 					FOREIGN KEY (blockedID) REFERENCES "user" (userID) ON DELETE CASCADE
 				)
 			`)
-    db.query(`
-				CREATE TABLE IF NOT EXISTS info_blocked_from (
-					userID INT,
-					blockFromID INT,
-					PRIMARY KEY (userID, blockFromID),
-					FOREIGN KEY (userID) REFERENCES "user" (userID) ON DELETE CASCADE,
-					FOREIGN KEY (blockFromID) REFERENCES "user" (userID) ON DELETE CASCADE
-				)
-			`)
   }
 
   async findTagsOfUser(userID: number): Promise<TagRow[] | null> {
@@ -105,6 +96,30 @@ export class userRelationDB {
       ])
       .then((res) => (res.rowCount > 0 ? true : false))
       .catch(() => false)
+  }
+
+  async isTagIDofUser(tagID: number, userID: number): Promise<boolean> {
+    return db
+      .query(`SELECT * FROM info_tag WHERE userID = $1 AND tagID = $2`, [
+        userID,
+        tagID,
+      ])
+      .then((res) => (res.rowCount > 0 ? true : false))
+      .catch(() => false)
+  }
+
+  async isTagContentofUser(
+    tagContent: string,
+    userID: number,
+  ): Promise<boolean> {
+    const tagID = await db
+      .query(`SELECT tagID FROM tag WHERE tagContent = $1`, [tagContent])
+      .then((res) => (res.rowCount > 0 ? res.rows[0].tagID : null))
+    if (tagID) {
+      return this.isTagIDofUser(tagID, userID)
+    } else {
+      return false
+    }
   }
 
   async findViewersOfUser(userID: number): Promise<SafeUserRow[] | null> {
@@ -149,6 +164,16 @@ export class userRelationDB {
   ): Promise<boolean> {
     return db
       .query(`DELETE FROM info_viewed WHERE userID = $1 AND viewerID = $2`, [
+        userID,
+        viewerID,
+      ])
+      .then((res) => (res.rowCount > 0 ? true : false))
+      .catch(() => false)
+  }
+
+  async isViewerofUser(viewerID: number, userID: number): Promise<boolean> {
+    return db
+      .query(`SELECT * FROM info_viewed WHERE userID = $1 AND viewerID = $2`, [
         userID,
         viewerID,
       ])
@@ -208,6 +233,19 @@ export class userRelationDB {
       .catch(() => false)
   }
 
+  async isViewerInHistoryofUser(
+    seenID: number,
+    userID: number,
+  ): Promise<boolean> {
+    return db
+      .query(
+        `SELECT * FROM info_view_history WHERE userID = $1 AND seenID = $2`,
+        [userID, seenID],
+      )
+      .then((res) => (res.rowCount > 0 ? true : false))
+      .catch(() => false)
+  }
+
   async findLikesOfUser(userID: number): Promise<SafeUserRow[] | null> {
     return db
       .query(
@@ -254,6 +292,16 @@ export class userRelationDB {
       .catch(() => false)
   }
 
+  async isLikeofUser(likeID: number, userID: number): Promise<boolean> {
+    return db
+      .query(`SELECT * FROM info_liked WHERE userID = $1 AND likeID = $2`, [
+        userID,
+        likeID,
+      ])
+      .then((res) => (res.rowCount > 0 ? true : false))
+      .catch(() => false)
+  }
+
   async findConnectionsOfUser(userID: number): Promise<SafeUserRow[] | null> {
     return db
       .query(
@@ -267,7 +315,8 @@ export class userRelationDB {
          INNER JOIN
           "user" u ON c.connectID = u.userID
         WHERE
-          c.userID = $1;`,
+          (c.userID = $1)
+          OR (c.connectID = $1);`,
         [userID],
       )
       .then((res) => {
@@ -299,7 +348,22 @@ export class userRelationDB {
   ): Promise<boolean> {
     return db
       .query(
-        `DELETE FROM info_connected WHERE userID = $1 AND connectID = $2`,
+        `DELETE FROM info_connected WHERE (userID = $1 AND connectID = $2) OR (userID = $2 AND connectID = $1)`,
+        [userID, connectID],
+      )
+      .then((res) => (res.rowCount > 0 ? true : false))
+      .catch(() => false)
+  }
+
+  async isConnectionofUser(
+    connectID: number,
+    userID: number,
+  ): Promise<boolean> {
+    return db
+      .query(
+        `SELECT * FROM info_connected
+         WHERE (userID = $1 AND connectID = $2)
+            OR (userID = $2 AND connectID = $1)`,
         [userID, connectID],
       )
       .then((res) => (res.rowCount > 0 ? true : false))
@@ -355,52 +419,10 @@ export class userRelationDB {
       .catch(() => false)
   }
 
-  async findBlockFromOfUser(userID: number): Promise<SafeUserRow[] | null> {
+  async isBlockedofUser(blockedID: number, userID: number): Promise<boolean> {
     return db
       .query(
-        `SELECT
-        u.userID,
-        u.username,
-        u.firstName,
-        u.lastName
-      FROM
-        info_blocked_from b
-       INNER JOIN
-        "user" u ON b.blockFromID = u.userID
-      WHERE
-        b.userID = $1;`,
-        [userID],
-      )
-      .then((res) => {
-        if (res.rowCount > 0) {
-          const users: SafeUserRow[] = res.rows.map((row) => toSafeUserRow(row))
-          return users
-        } else {
-          return null
-        }
-      })
-  }
-
-  async addBlockFromToUser(
-    blockedID: number,
-    userID: number,
-  ): Promise<boolean> {
-    return db
-      .query(
-        `INSERT INTO info_blocked_from (userID, blockFromID) VALUES ($1, $2)`,
-        [userID, blockedID],
-      )
-      .then((res) => (res.rowCount > 0 ? true : false))
-      .catch(() => false)
-  }
-
-  async removeBlockFromFromUser(
-    blockedID: number,
-    userID: number,
-  ): Promise<boolean> {
-    return db
-      .query(
-        `DELETE FROM info_blocked_from WHERE userID = $1 AND blockFromID = $2`,
+        `SELECT * FROM info_blocked WHERE userID = $1 AND blockedID = $2`,
         [userID, blockedID],
       )
       .then((res) => (res.rowCount > 0 ? true : false))

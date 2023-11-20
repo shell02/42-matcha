@@ -197,7 +197,7 @@ export class AuthService {
         id: user.userID,
       },
       this.jwtToken,
-      { expiresIn: '10min' },
+      { expiresIn: '1min' },
     )
     const refreshToken = jwt.sign(
       {
@@ -258,7 +258,7 @@ export class AuthService {
         id: user.userID,
       },
       this.jwtToken,
-      { expiresIn: '10min' },
+      { expiresIn: '1min' },
     )
 
     return {

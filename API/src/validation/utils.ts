@@ -47,6 +47,19 @@ export const isBoolean = (input: unknown): boolean => {
   }
 }
 
+export const isIDValid = (input: unknown): boolean => {
+  if (typeof input === 'string' || input instanceof String) {
+    if (input.trim() === '') return false
+    if (isNaN(Number(input))) return false
+    const num = Number(input)
+    if (num % 1 !== 0) return false
+    if (num <= 0) return false
+    return true
+  } else {
+    return false
+  }
+}
+
 export const encodeToken = (token: string): string => {
   return token.replace(/\./g, '%25')
 }

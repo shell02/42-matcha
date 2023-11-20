@@ -75,7 +75,6 @@ export interface FullUserRow extends SafeUserRow {
  * likes?: SafeUserRow[]
  * connected?: SafeUserRow[]
  * block?: SafeUserRow[]
- * blockFrom?: SafeUserRow[]
  * views?: SafeUserRow[]
  * viewHistory?: SafeUserRow[]
  * pictures?: PictureRow[]
@@ -85,7 +84,6 @@ export interface ComplexUserRow extends FullUserRow {
   likes?: SafeUserRow[]
   connected?: SafeUserRow[]
   block?: SafeUserRow[]
-  blockFrom?: SafeUserRow[]
   views?: SafeUserRow[]
   viewHistory?: SafeUserRow[]
   pictures?: PictureRow[]
@@ -123,7 +121,6 @@ const toComplexUserRow = (
   viewHistory: SafeUserRow[] | null,
   likes: SafeUserRow[] | null,
   block: SafeUserRow[] | null,
-  blockFrom: SafeUserRow[] | null,
   connected: SafeUserRow[] | null,
   pictures: PictureRow[] | null,
 ): ComplexUserRow => {
@@ -151,9 +148,6 @@ const toComplexUserRow = (
   }
   if (block) {
     complexUser.block = block
-  }
-  if (blockFrom) {
-    complexUser.blockFrom = blockFrom
   }
   if (pictures) {
     complexUser.pictures = pictures
@@ -280,7 +274,6 @@ export class DatabaseService {
     )
     const likes = await this.usersRelation.findLikesOfUser(user.userID)
     const block = await this.usersRelation.findBlockedOfUser(user.userID)
-    const blockFrom = await this.usersRelation.findBlockFromOfUser(user.userID)
     const pictures = await this.users.findPicturesOfUser(user.userID)
     return toComplexUserRow(
       user,
@@ -290,7 +283,6 @@ export class DatabaseService {
       viewHistory,
       likes,
       block,
-      blockFrom,
       connected,
       pictures,
     )
@@ -347,6 +339,10 @@ export class DatabaseService {
     return null
   }
 
+  async isViewofUser(userID: number, viewerID: number): Promise<boolean> {
+    return this.usersRelation.isViewerofUser(viewerID, userID)
+  }
+
   async addLikeToUser(
     userID: number,
     likeID: number,
@@ -365,6 +361,10 @@ export class DatabaseService {
     return null
   }
 
+  async isLikeofUser(userID: number, likeID: number): Promise<boolean> {
+    return this.usersRelation.isLikeofUser(likeID, userID)
+  }
+
   async addHistoryToUser(
     userID: number,
     seenID: number,
@@ -372,6 +372,13 @@ export class DatabaseService {
     const res = await this.usersRelation.addViewerToUserHistory(seenID, userID)
     if (res === true) return this.findOneRelationByID(userID)
     return null
+  }
+
+  async isViewerInHistoryofUser(
+    userID: number,
+    seenID: number,
+  ): Promise<boolean> {
+    return this.usersRelation.isViewerInHistoryofUser(seenID, userID)
   }
 
   async addConnectionToUser(
@@ -395,6 +402,13 @@ export class DatabaseService {
     return null
   }
 
+  async isConnectionofUser(
+    connectID: number,
+    userID: number,
+  ): Promise<boolean> {
+    return this.usersRelation.isConnectionofUser(connectID, userID)
+  }
+
   async addBlockedToUser(
     userID: number,
     blockedID: number,
@@ -416,25 +430,12 @@ export class DatabaseService {
     return null
   }
 
-  async addBlockFromToUser(
-    userID: number,
-    blockedID: number,
-  ): Promise<ComplexUserRow | null> {
-    const res = await this.usersRelation.addBlockFromToUser(blockedID, userID)
-    if (res === true) return this.findOneRelationByID(userID)
-    return null
+  async isBlockedofUser(blockedID: number, userID: number): Promise<boolean> {
+    return this.usersRelation.isBlockedofUser(blockedID, userID)
   }
 
-  async removeBlockFromFromUser(
-    userID: number,
-    blockedID: number,
-  ): Promise<ComplexUserRow | null> {
-    const res = await this.usersRelation.removeBlockFromFromUser(
-      blockedID,
-      userID,
-    )
-    if (res === true) return this.findOneRelationByID(userID)
-    return null
+  async isBlockedByUser(userID: number, blockByID: number): Promise<boolean> {
+    return this.usersRelation.isBlockedofUser(userID, blockByID)
   }
 
   async findAllTags(): Promise<TagRow[] | null> {
@@ -451,6 +452,10 @@ export class DatabaseService {
 
   async removeTagFromUser(userID: number, tagID: number): Promise<boolean> {
     return this.usersRelation.removeTagFromUser(tagID, userID)
+  }
+
+  async isTagofUser(tagID: number, userID: number): Promise<boolean> {
+    return this.usersRelation.isTagIDofUser(tagID, userID)
   }
 
   async createTag(content: string): Promise<boolean> {
@@ -477,6 +482,10 @@ export class DatabaseService {
 
   async removeNotificationFromUser(notifID: number): Promise<boolean> {
     return this.notifications.delete(notifID)
+  }
+
+  async removeAllNotificationFromUser(userID: number): Promise<boolean> {
+    return this.notifications.deleteAll(userID)
   }
 
   async findPictureByID(pictureID: number): Promise<PictureRow | null> {

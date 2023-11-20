@@ -1,7 +1,9 @@
 import { createApp } from './src/app'
+import { createServer } from './src/sockets'
 
 const app = createApp()
+const server = createServer(app)
 
-app.listen(3001, () => {
-  console.log('Listen on port 3001...')
+server.listen(3001, () => {
+  console.log('Listening on port 3001...')
 })

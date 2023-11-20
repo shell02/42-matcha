@@ -1,4 +1,5 @@
 import { JwtPayload } from 'jwt-decode'
+import { Socket } from 'socket.io-client'
 
 //AUTH
 
@@ -6,6 +7,7 @@ export interface AuthContextType {
   authToken: string | undefined
   id: number
   status: number
+  socket: Socket
 }
 
 export interface DecodedJWT extends JwtPayload {
@@ -28,4 +30,12 @@ export enum SexualPrefType {
   ViewWomen,
   ViewMen,
   ViewBoth,
+}
+
+export enum NotificationType {
+  LikeReceived,
+  ProfileViewed,
+  PrivateMessage,
+  LikedBack,
+  Unliked,
 }

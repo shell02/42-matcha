@@ -25,12 +25,21 @@ import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import { ThemeProvider } from '@mui/material/styles'
 import theme from './mui-theme'
+import SocketProvider from './providers/SocketProvider'
+import { isTokenExpired, refreshToken } from './components/RefreshToken'
 
 function App() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        retry: 1,
+        retry: (failureCount, error) => {
+          console.log(error)
+          if (failureCount > 2) return false
+          if (isTokenExpired(Cookies.get('accessToken') || '')) {
+            refreshToken()
+          }
+          return true
+        },
       },
     },
   })
@@ -48,47 +57,49 @@ function App() {
               <Routes>
                 {login ? (
                   <>
-                    <Route
-                      path='/'
-                      element={
-                        <CustomRoute minStatus={2}>
-                          <Home />
-                        </CustomRoute>
-                      }
-                    />
-                    <Route
-                      path='/search'
-                      element={
-                        <CustomRoute minStatus={2}>
-                          <Search />
-                        </CustomRoute>
-                      }
-                    />
-                    <Route
-                      path='/user'
-                      element={
-                        <CustomRoute minStatus={2}>
-                          <Profile />
-                        </CustomRoute>
-                      }
-                    />
-                    <Route
-                      path='/user/:userId'
-                      element={
-                        <CustomRoute minStatus={3}>
-                          <Profile />
-                        </CustomRoute>
-                      }
-                    />
-                    <Route
-                      path='/editProfile'
-                      element={
-                        // <CustomRoute minStatus={1}> add in auth
-                        <CustomRoute minStatus={0}>
-                          <EditProfile />
-                        </CustomRoute>
-                      }
-                    />
+                    <Route element={<SocketProvider />}>
+                      <Route
+                        path='/'
+                        element={
+                          <CustomRoute minStatus={2}>
+                            <Home />
+                          </CustomRoute>
+                        }
+                      />
+                      <Route
+                        path='/search'
+                        element={
+                          <CustomRoute minStatus={2}>
+                            <Search />
+                          </CustomRoute>
+                        }
+                      />
+                      <Route
+                        path='/user'
+                        element={
+                          <CustomRoute minStatus={2}>
+                            <Profile />
+                          </CustomRoute>
+                        }
+                      />
+                      <Route
+                        path='/user/:userId'
+                        element={
+                          <CustomRoute minStatus={3}>
+                            <Profile />
+                          </CustomRoute>
+                        }
+                      />
+                      <Route
+                        path='/editProfile'
+                        element={
+                          // <CustomRoute minStatus={1}> add in auth
+                          <CustomRoute minStatus={0}>
+                            <EditProfile />
+                          </CustomRoute>
+                        }
+                      />
+                    </Route>
                   </>
                 ) : (
                   <>

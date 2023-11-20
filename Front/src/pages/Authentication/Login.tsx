@@ -9,6 +9,7 @@ import MySnackBar from '../../components/MySnackBar'
 import { accountSchema } from '../../utils/schemas'
 import { jwtDecode } from 'jwt-decode'
 import { DecodedJWT } from '../../utils/types'
+import useAuth from '../../hooks/context/useAuth'
 
 interface Props {
   setLogin: (login: string) => void
@@ -17,6 +18,7 @@ interface Props {
 function Login({ setLogin }: Props) {
   const navigate = useNavigate()
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const { socket } = useAuth()
 
   const handleFetch = async (data: FieldValues) => {
     setErrorMessage('')
@@ -35,6 +37,7 @@ function Login({ setLogin }: Props) {
       setLogin(json.accessToken)
       Cookies.set('accessToken', json.accessToken)
       const decodedToken = jwtDecode<DecodedJWT>(json.accessToken)
+      socket.emit('auth', { id: decodedToken.id })
       if (decodedToken?.userStatus === 1) navigate('/editProfile')
       else navigate('/')
     }

@@ -9,6 +9,7 @@ dotenv.config({ path: '../.env' })
 
 import { authRouter } from './routes/auth.route'
 import { userRouter } from './routes/user.route'
+import { notifyRouter } from './routes/notify.route'
 
 export const uploadPath = path.join(__dirname, 'uploads')
 
@@ -19,6 +20,7 @@ export const createApp = (): Application => {
     'http://localhost:3000',
     'http://localhost:5432',
     'http://localhost:3001',
+    'http://localhost:3002',
   ]
   const corsOptions = {
     origin: (
@@ -44,6 +46,7 @@ export const createApp = (): Application => {
 
   app.use('/auth', authRouter)
   app.use('/users', userRouter)
+  app.use('/notify', notifyRouter)
 
   app.get('/', (req: Request, res: Response) => {
     res.send('Hi there')

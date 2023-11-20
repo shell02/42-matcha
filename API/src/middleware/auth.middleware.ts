@@ -4,6 +4,7 @@ import { UserStatus } from '../models/User'
 
 export interface CustomRequest extends Request {
   user?: {
+    id: number
     username: string
     userStatus: UserStatus
   }
@@ -25,6 +26,7 @@ export const verifyJWT = (
     if (err) return res.sendStatus(403)
     if (decoded && typeof decoded !== 'string') {
       req.user = {
+        id: decoded.id,
         username: decoded.username,
         userStatus: decoded.userStatus,
       }

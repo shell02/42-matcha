@@ -127,4 +127,11 @@ export class notificationDB {
       .then((res) => (res.rowCount > 0 ? true : false))
       .catch(() => false)
   }
+
+  async deleteAll(userID: number): Promise<boolean> {
+    return db
+      .query(`DELETE FROM notification WHERE toUserID = $1`, [userID])
+      .then((res) => (res.rowCount > 0 ? true : false))
+      .catch(() => false)
+  }
 }

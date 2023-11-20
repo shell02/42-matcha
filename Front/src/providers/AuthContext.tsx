@@ -3,12 +3,14 @@ import Cookies from 'js-cookie'
 import { isTokenExpired, refreshToken } from '../components/RefreshToken'
 import { AuthContextType } from '../utils/types'
 import { jwtDecode } from 'jwt-decode'
+import { io } from 'socket.io-client'
 
 interface AuthProviderProps {
   children: React.ReactNode
 }
 
 const AuthContext = createContext({} as AuthContextType)
+const socket = io('http://localhost:3001')
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [authToken, setAuthToken] = useState(Cookies.get('accessToken'))
@@ -36,6 +38,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         authToken,
         id: decodedToken?.id || 0,
         status: decodedToken?.userStatus,
+        socket: socket,
       }}
     >
       {children}
